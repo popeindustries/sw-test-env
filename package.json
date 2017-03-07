@@ -1,0 +1,29 @@
+{
+  "name": "pseudo-service-worker",
+  "description": "A fake ServiceWorker environment for testing",
+  "version": "1.0.0-beta",
+  "author": "Alexander Pope <alex@pope-industries.com>",
+  "keywords": [
+    "mock",
+    "pseudo",
+    "service worker",
+    "ServiceWorker",
+    "test",
+    "testing",
+    "worker"
+  ],
+  "dependencies": {
+    "node-fetch": "^1.6.3",
+    "pseudo-worker": "^1.1.1"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^3.2.0"
+  },
+  "main": "index.js",
+  "repository": "https://github.com/popeindustries/pseudo-service-worker.git",
+  "license": "MIT",
+  "scripts": {
+    "test": "NODE_ENV=test mocha test/test.js --reporter spec --bail"
+  }
+}

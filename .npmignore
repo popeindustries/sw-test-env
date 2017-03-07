@@ -1,0 +1,6 @@
+.DS_Store
+.git*
+test
+docs
+yarn.lock
+.travis.yml

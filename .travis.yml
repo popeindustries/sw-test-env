@@ -1,0 +1,12 @@
+language: node_js
+node_js:
+  - "6"
+  - "7"
+install:
+  - npm install -g yarn
+  - yarn
+  - yarn run test
+cache:
+  directories:
+    - ~/.yarn
+    - ~/.nvm
