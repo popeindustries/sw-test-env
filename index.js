@@ -1,7 +1,11 @@
 'use strict';
 
+const fetch = require('node-fetch');
 const fs = require('fs');
+const Headers = require('./lib/Headers');
 const path = require('path');
+const Request = require('./lib/Request');
+const Response = require('./lib/Response');
 const ServiceWorker = require('./lib/ServiceWorker');
 const vm = require('vm');
 
@@ -24,15 +28,27 @@ module.exports = function pseudoServiceWorker (scriptpath) {
   const serviceWorker = new ServiceWorker();
   const sandbox = vm.createContext(Object.assign(serviceWorker, {
     console,
+    fetch,
+    Request,
+    Response,
+    Headers,
     module: scriptModule,
     exports: scriptModule.exports,
     process,
+    self: serviceWorker,
     require: getRequire(contextpath)
   }));
 
   vm.runInContext(script, sandbox);
 
-  return { serviceWorker: sandbox, module: scriptModule.exports };
+  return {
+    fetch,
+    Headers,
+    module: scriptModule.exports,
+    Request,
+    Response,
+    serviceWorker: sandbox
+  };
 };
 
 /**
