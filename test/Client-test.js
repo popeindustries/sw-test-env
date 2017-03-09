@@ -7,7 +7,6 @@ describe('Client', () => {
   describe('constructor()', () => {
     it('should add url property using value from argument', () => {
       const expected = 'https://somewhere.com/in/time';
-
       const actual = new Client(expected);
 
       expect(actual.url).to.equal(expected);
