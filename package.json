@@ -14,7 +14,8 @@
   ],
   "dependencies": {
     "node-fetch": "^1.6.3",
-    "pseudo-worker": "^1.1.1"
+    "pseudo-worker": "^1.1.1",
+    "uuid": "^3.0.1"
   },
   "devDependencies": {
     "chai": "^3.5.0",
