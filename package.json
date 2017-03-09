@@ -3,9 +3,7 @@
   "description": "A sandboxed ServiceWorker environment for testing",
   "version": "1.0.0-beta",
   "author": "Alexander Pope <alex@pope-industries.com>",
-  "contributors": {
-
-  },
+  "contributors": {},
   "keywords": [
     "mock",
     "pseudo",
@@ -18,7 +16,6 @@
   ],
   "dependencies": {
     "node-fetch": "^1.6.3",
-    "pseudo-worker": "^1.1.1",
     "uuid": "^3.0.1"
   },
   "devDependencies": {
