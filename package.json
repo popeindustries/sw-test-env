@@ -1,11 +1,15 @@
 {
   "name": "pseudo-service-worker",
-  "description": "A fake ServiceWorker environment for testing",
+  "description": "A sandboxed ServiceWorker environment for testing",
   "version": "1.0.0-beta",
   "author": "Alexander Pope <alex@pope-industries.com>",
+  "contributors": {
+
+  },
   "keywords": [
     "mock",
     "pseudo",
+    "sandbox",
     "service worker",
     "ServiceWorker",
     "test",
