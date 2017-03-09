@@ -1,0 +1,1 @@
+self.foo = 'foo';

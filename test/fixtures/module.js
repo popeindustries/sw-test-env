@@ -1,5 +1,1 @@
-module.exports = {
-  foo () {
-    return self;
-  }
-};
+exports.foo = 'foo';
