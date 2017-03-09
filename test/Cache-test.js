@@ -2,17 +2,27 @@
 
 const { expect } = require('chai');
 const Cache = require('../lib/Cache');
+const nock = require('nock');
 const Request = require('../lib/Request');
 const Response = require('../lib/Response');
 
-describe('Cache', () => {
-  let cache;
+let cache, fake;
 
+describe('Cache', () => {
+  before(() => {
+    nock.disableNetConnect();
+    nock.enableNetConnect('127.0.0.1');
+  });
   beforeEach(() => {
+    fake = nock('http://127.0.0.1:4000', { encodedQueryParams: true });
     cache = new Cache('test');
   });
   afterEach(() => {
+    nock.cleanAll();
     cache._destroy();
+  });
+  after(() => {
+    nock.enableNetConnect();
   });
 
   describe('put()', () => {
@@ -40,7 +50,31 @@ describe('Cache', () => {
   });
 
   describe('add()', () => {
+    it('should fetch and store a request url', () => {
+      fake
+        .get('/foo')
+        .reply(200, { foo: 'foo' });
 
+      return cache
+        .add('http://127.0.0.1:4000/foo')
+        .then(() => {
+          expect(cache.items.size).to.equal(1);
+        });
+    });
+    it('should fetch and store a request', () => {
+      fake
+        .get('/foo')
+        .reply(200, { foo: 'foo' });
+
+      const req = new Request('http://127.0.0.1:4000/foo');
+
+      return cache
+        .add(req)
+        .then(() => cache.items.get(req).json())
+        .then((body) => {
+          expect(body).to.deep.equal({ foo: 'foo' });
+        });
+    });
   });
 
   describe('addAll()', () => {

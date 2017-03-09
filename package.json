@@ -28,6 +28,6 @@
   "repository": "https://github.com/popeindustries/pseudo-service-worker.git",
   "license": "MIT",
   "scripts": {
-    "test": "NODE_ENV=test mocha test/test.js --reporter spec --bail"
+    "test": "NODE_ENV=test mocha test/*.js --reporter spec --bail"
   }
 }
