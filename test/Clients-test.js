@@ -50,4 +50,31 @@ describe('Clients', () => {
       });
     });
   });
+
+  describe('claim()', () => {
+    it('should return a Promise', () => {
+      const actual = unit.claim();
+
+      expect(actual).to.be.a('promise');
+    });
+  });
+
+  describe('matchAll()', () => {
+    it('should return a Promise', () => {
+      const actual = unit.matchAll();
+
+      expect(actual).to.be.a('promise');
+    });
+    it('Promise should resolve to an array containing the clients controlled by the current service worker', () => {
+      return unit.openWindow('https://powerslave.com')
+      .then((expected) => {
+        return unit.matchAll()
+        .then((clients) => {
+          expect(clients).to.be.an('array');
+          expect(clients).to.include(expected);
+        });
+      });
+    });
+    it('should care about the options parameter');
+  });
 });
