@@ -39,6 +39,11 @@ Load and execute `scriptURL` in a mock `ServiceWorker` context. `scriptURL` may 
 
 In addition to all the normal global apis available to a `ServiceWorker`, the loaded script will also have access to `require`, `module`, and `exports`. As a result, script code that normally requires bundling for the browser (with Webpack, Browserify, et al) can be tested without a build step.
 
+**`options`** include:
+
+- **`baseURL: String`** the base URL to prepend to all relative URLs passed to `fetch()` (defaults to `http://127.0.0.1:3333`)
+- **`scope: String`** the `ServiceWorker` registration scope (defaults to `/`)
+
 #### **`sw.ready: Promise`** 
 
 Force registered script to `install` and `activate`:
@@ -87,4 +92,4 @@ sw.register('./path/to/sw-utils.js')
 
 ## Inspiration
 
-Special thanks goes to Pinterest ([service-worker-mock](https://github.com/pinterest/service-workers/tree/master/packages/service-worker-mock)) and Nolan Lawson ([pseudo-worker](https://github.com/nolanlawson/pseudo-worker)) for their inspiring work and ideas.
+Special thanks goes to Pinterest ([service-worker-mock](https://github.com/pinterest/service-workers/tree/master/packages/service-worker-mock)) and Nolan Lawson ([pseudo-worker](https://github.com/nolanlawson/pseudo-worker)) for their inspiring work.
