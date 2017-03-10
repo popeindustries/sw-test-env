@@ -27,35 +27,64 @@ sw.register('./path/to/sw.js')
 
 ## API
 
-**`create(): ServiceWorkerContainer`** create a new `ServiceWorkerContainer` instance. If there is an existing active container it will be first destroyed.
+#### **`create(): ServiceWorkerContainer`** 
+
+Create a new `ServiceWorkerContainer` instance. If there is an existing active container, it will be first destroyed.
 
 ### ServiceWorkerContainer
 
-**`register(scriptURL: String): Promise`** load and execute `scriptURL` in a mock `ServiceWorker` context. `scriptURL` may be a relative or absolute filepath, or a string of code to be parsed and executed.
+#### **`sw.register(scriptURL: String, options: Object): Promise`** 
 
-The loaded script will have access to `self` and all relevant `Worker/ServiceWorker` apis:
+Load and execute `scriptURL` in a mock `ServiceWorker` context. `scriptURL` may be a relative or absolute filepath, or a string of code to be parsed and executed.
+
+In addition to all the normal global apis available to a `ServiceWorker`, the loaded script will also have access to `require`, `module`, and `exports`. As a result, script code that normally requires bundling for the browser (with Webpack, Browserify, et al) can be tested without a build step.
+
+#### **`sw.ready: Promise`** 
+
+Force registered script to `install` and `activate`:
+
+```js
+sw.register('./path/to/sw.js')
+  .then((registration) => sw.ready)
+  .then(() => {
+    assert.equal(sw.controller.state, 'activated');
+  });
+```
+
+#### **`sw.trigger(eventType: String, ...args): Promise`** 
+
+Manually trigger an event (`install`, `activate`, `fetch`, `error`) in the `ServiceWorker` scope:
+
+```js
+sw.register('./path/to/sw.js')
+  .then((registration) => sw.ready)
+  .then((registration) => sw.trigger('fetch', 'assets/index.js'))
+  .then((response) => {
+    assert.equal(response.url, 'assets/index.js');
+  });
+```
+
+#### **`sw.scope: ServiceWorkerGlobalScope`** 
+
+Access the scope in which the registered script is running in. The following are available:
 
 - [`caches`](https://developer.mozilla.org/en-US/docs/Web/API/CacheStorage)
 - [`clients`](https://developer.mozilla.org/en-US/docs/Web/API/Clients)
 - [`registration`](https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerRegistration)
-- [`fetch()`](https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/fetch)
 - [`skipWaiting()`](https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerGlobalScope/skipWaiting)
-- `addEventListener()`
-- `postMessage()`
 
-In addition, the loaded script will also have access to `require`, `module`, and `exports`. As a result, script code that normally requires bundling for the browser (Webpack, Browserify, etc) can be tested without a build step.
+#### **`sw.api: Object`** 
 
-Returns a `context` object with the following properties:
+If a registered script exposes a module api (via `module` and `exports`), you can access the result as `api`:
 
-- **`serviceWorker: ServiceWorker`** the `ServiceWorker` instance (roughly equivalent to [ServiceWorkerGlobalScope](https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerGlobalScope))
-- **`module: Object`** the exported `module.exports` api
-- **`fetch: Function`** the global `fetch` method
-- **`Request: Constructor`** the `Request` class constructor
-- **`Response: Constructor`** the `Response` class constructor
-- **`Headers: Constructor`** the `Headers` class constructor
-
-## Testing
+```js
+sw.register('./path/to/sw-utils.js')
+  .then((registration) => sw.ready)
+  .then((registration) => {
+    sw.api.someUtilFn();
+  });
+```
 
 ## Inspiration
 
-Special thanks goes to Pinterest ([service-worker-mock](https://github.com/pinterest/service-workers/tree/master/packages/service-worker-mock)) and Nolan Lawson ([pseudo-worker](https://github.com/nolanlawson/pseudo-worker)) for their inspiring work and borrowed code.
+Special thanks goes to Pinterest ([service-worker-mock](https://github.com/pinterest/service-workers/tree/master/packages/service-worker-mock)) and Nolan Lawson ([pseudo-worker](https://github.com/nolanlawson/pseudo-worker)) for their inspiring work and ideas.
