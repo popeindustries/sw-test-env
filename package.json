@@ -1,8 +1,8 @@
 {
-  "name": "pseudo-service-worker",
+  "name": "sw-test-env",
   "description": "A sandboxed ServiceWorker environment for testing",
   "version": "1.0.0-beta",
-  "author": "Alexander Pope <alex@pope-industries.com>",
+  "author": "Alexander Pope <alexander.pope@nrk.no>",
   "contributors": {},
   "keywords": [
     "mock",
@@ -27,7 +27,7 @@
     "node": ">=6"
   },
   "main": "index.js",
-  "repository": "https://github.com/popeindustries/pseudo-service-worker.git",
+  "repository": "https://github.com/yr/sw-test-env.git",
   "license": "MIT",
   "scripts": {
     "test": "NODE_ENV=test mocha test/*.js --reporter spec --bail",

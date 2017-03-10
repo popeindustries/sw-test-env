@@ -1,11 +1,11 @@
-[![NPM Version](https://img.shields.io/npm/v/pseudo-service-worker.svg?style=flat)](https://npmjs.org/package/pseudo-service-worker)
-[![Build Status](https://img.shields.io/travis/popeindustries/pseudo-service-worker.svg?style=flat)](https://travis-ci.org/popeindustries/pseudo-service-worker)
+[![NPM Version](https://img.shields.io/npm/v/sw-test-env.svg?style=flat)](https://npmjs.org/package/sw-test-env)
+[![Build Status](https://img.shields.io/travis/yr/sw-test-env.svg?style=flat)](https://travis-ci.org/yr/sw-test-env)
 
-# Pseudo ServiceWorker
+# ServiceWorker Test Environment
 
 A sandboxed `ServiceWorker` context for testing `ServiceWorker` code on the command line.
 
-Testing code written to run in a `ServiceWorker` is hard, and generally requires a browser environment and lots of ceremony to work. `pseudo-service-worker` is the magic ingredient for easy unit/integration testing of `ServiceWorker` code. Just load your script, and poke, prod, inspect, and manipulate the returned context:
+Testing code written to run in a `ServiceWorker` is hard, and generally requires a browser environment and lots of ceremony to work. `sw-test-env` is the magic ingredient for easy unit/integration testing of `ServiceWorker` code. Just load your script, and poke, prod, inspect, and manipulate the returned context:
 
 ```js
 const assert = require('assert');
