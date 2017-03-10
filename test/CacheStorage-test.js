@@ -20,7 +20,7 @@ describe('CacheStorage', () => {
       return caches.open('foo')
         .then((cache) => {
           expect(cache).to.have.property('name', 'foo');
-          expect(caches.caches.size).to.equal(1);
+          expect(caches._caches.size).to.equal(1);
         });
     });
     it('should return existing cache instance', () => {
@@ -28,7 +28,7 @@ describe('CacheStorage', () => {
         .then((cache) => caches.open('foo'))
         .then((cache) => {
           expect(cache).to.have.property('name', 'foo');
-          expect(caches.caches.size).to.equal(1);
+          expect(caches._caches.size).to.equal(1);
         });
     });
   });

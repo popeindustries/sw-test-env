@@ -31,8 +31,8 @@ describe('Cache', () => {
       const res = new Response('foo');
 
       cache.put(req, res);
-      expect(cache.items.has(req)).to.equal(true);
-      expect(cache.items.get(req)).to.equal(res);
+      expect(cache._items.has(req)).to.equal(true);
+      expect(cache._items.get(req)).to.equal(res);
     });
     it('should overwrite an existing request/response', () => {
       const req1 = new Request('foo.js');
@@ -42,9 +42,9 @@ describe('Cache', () => {
 
       cache.put(req1, res1);
       cache.put(req2, res2);
-      expect(cache.items.has(req2)).to.equal(false);
-      expect(cache.items.has(req1)).to.equal(true);
-      expect(cache.items.get(req1)).to.equal(res2);
+      expect(cache._items.has(req2)).to.equal(false);
+      expect(cache._items.has(req1)).to.equal(true);
+      expect(cache._items.get(req1)).to.equal(res2);
     });
     it('should not overwrite an existing request/response if different VARY header');
   });
@@ -58,7 +58,7 @@ describe('Cache', () => {
       return cache
         .add('http://127.0.0.1:4000/foo')
         .then(() => {
-          expect(cache.items.size).to.equal(1);
+          expect(cache._items.size).to.equal(1);
         });
     });
     it('should fetch and store a request', () => {
@@ -70,7 +70,7 @@ describe('Cache', () => {
 
       return cache
         .add(req)
-        .then(() => cache.items.get(req).json())
+        .then(() => cache._items.get(req).json())
         .then((body) => {
           expect(body).to.deep.equal({ foo: 'foo' });
         });
@@ -88,7 +88,7 @@ describe('Cache', () => {
       return cache
         .addAll(['http://127.0.0.1:4000/foo', 'http://127.0.0.1:4000/bar'])
         .then(() => {
-          expect(cache.items.size).to.equal(2);
+          expect(cache._items.size).to.equal(2);
         });
     });
     it('should fetch and store multiple requests', () => {
@@ -103,7 +103,7 @@ describe('Cache', () => {
 
       return cache
         .addAll([req1, req2])
-        .then(() => Promise.all([cache.items.get(req1).json(), cache.items.get(req2).json()]))
+        .then(() => Promise.all([cache._items.get(req1).json(), cache._items.get(req2).json()]))
         .then((bodies) => {
           expect(bodies[0]).to.deep.equal({ foo: 'foo' });
           expect(bodies[1]).to.deep.equal({ bar: 'bar' });
@@ -193,7 +193,7 @@ describe('Cache', () => {
       return cache.delete(req)
         .then((success) => {
           expect(success).to.equal(true);
-          expect(cache.items.size).to.equal(0);
+          expect(cache._items.size).to.equal(0);
         });
     });
     it('should remove matching requests, ignoring search query', () => {
@@ -207,7 +207,7 @@ describe('Cache', () => {
       return cache.delete(req1, { ignoreSearch: true })
         .then((success) => {
           expect(success).to.equal(true);
-          expect(cache.items.size).to.equal(0);
+          expect(cache._items.size).to.equal(0);
         });
     });
     it('should remove matching requests, ignoring method');
