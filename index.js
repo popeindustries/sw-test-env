@@ -20,7 +20,7 @@ module.exports = {
    * @returns {ServiceWorkerContainer}
    */
   create () {
-    if (activeContainer && activeContainer._registration) activeContainer._registration.unregister();
+    if (activeContainer && activeContainer._registration) activeContainer._destroy();
     activeContainer = new ServiceWorkerContainer(path.dirname(module.parent.filename));
     return activeContainer;
   }
