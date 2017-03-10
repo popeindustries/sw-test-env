@@ -3,7 +3,7 @@
   "description": "A sandboxed ServiceWorker environment for testing",
   "version": "1.0.0-beta",
   "author": "Alexander Pope <alexander.pope@nrk.no>",
-  "contributors": {},
+  "contributors": ["Ola Christian Gundelsby <ola.christian.gundelsby@nrk.no>"],
   "keywords": [
     "mock",
     "pseudo",
