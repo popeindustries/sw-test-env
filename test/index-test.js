@@ -112,7 +112,7 @@ describe('sw-test-env', () => {
     it('should execute install/activate lifecyle', () => {
       return sw.register('./fixtures/sw.js')
         .then((registration) => sw.ready)
-        .then(() => {
+        .then((registration) => {
           expect(sw._sw.state).to.equal('activated');
           expect(sw.scope.foo).to.equal('foo');
           expect(sw.scope.bar).to.equal('bar');
@@ -126,7 +126,7 @@ describe('sw-test-env', () => {
         .reply(200);
       return sw.register('./fixtures/sw-install.js')
         .then((registration) => sw.ready)
-        .then(() => {
+        .then((registration) => {
           const urls = Array.from(sw.scope.caches._caches.get('v1')._items.keys()).map((req) => req.url);
 
           expect(sw._sw.state).to.equal('activated');
