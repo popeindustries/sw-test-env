@@ -1,5 +1,6 @@
 'use strict';
 
+const { handle } = require('./lib/events');
 const fetchFactory = require('./lib/fetchFactory');
 const fs = require('fs');
 const Headers = require('./lib/Headers');
@@ -35,7 +36,7 @@ module.exports = {
    */
   connect (url = DEFAULT_ORIGIN) {
     const origin = getOrigin(url);
-    const container = new ServiceWorkerContainer(url, register);
+    const container = new ServiceWorkerContainer(url, register, trigger);
 
     containers.add(container);
 
@@ -145,6 +146,81 @@ function load (scriptURL, globalScope, fetch) {
     api: scriptModule.exports,
     scope: sandbox
   };
+}
+
+/**
+ * Trigger 'eventType' in current scope
+ * @param {String} eventType
+ * @returns {Promise}
+ */
+function trigger (eventType, ...args) {
+  if (!this._registration) throw Error('no script registered yet');
+  switch (eventType) {
+    case 'install':
+      setState('installing');
+      break;
+    case 'activate':
+      setState('activating');
+      break;
+  }
+
+  const done = () => {
+    switch (eventType) {
+      case 'install':
+        setState('installed');
+        break;
+      case 'activate':
+        setState('activated');
+        break;
+    }
+  };
+
+  // TODO: handle alternative on* methods
+  if (this.scope._listeners[eventType]) {
+    return handle(this.scope._listeners, eventType, ...args)
+      .then((result) => {
+        done();
+        return result;
+      });
+  }
+
+  done();
+
+  return Promise.resolve();
+}
+
+/**
+ * Store 'state'
+ * @param {String} state
+ */
+function setState (state) {
+  switch (state) {
+    case 'installing':
+      if (this._sw.state != state) throw Error('ServiceWorker already installed');
+      this._registration.installing = this._sw;
+      this.controller = null;
+      break;
+    case 'installed':
+      this._sw.state = state;
+      this._registration.installing = null;
+      this._registration.waiting = this._sw;
+      break;
+    case 'activating':
+      if (this._sw.state != 'installed') throw Error('ServiceWorker not yet installed');
+      this._sw.state = state;
+      this._registration.activating = this._sw;
+      this.controller = null;
+      break;
+    case 'activated':
+      this._sw.state = state;
+      this._registration.waiting = null;
+      this._registration.active = this._sw;
+      this.controller = this._sw;
+      break;
+    default:
+      if (this._sw.state != 'activated') throw Error('ServiceWorker not yet active');
+      break;
+  }
 }
 
 /**
