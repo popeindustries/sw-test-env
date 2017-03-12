@@ -2,12 +2,24 @@
 
 const { expect } = require('chai');
 const { create } = require('../index');
+const nock = require('nock');
 
-let sw;
+let fake, sw;
 
-describe('ServiceWorkerContainer', () => {
+describe('sw-test-env', () => {
+  before(() => {
+    nock.disableNetConnect();
+    nock.enableNetConnect('127.0.0.1');
+  });
   beforeEach(() => {
+    fake = nock('http://127.0.0.1:3333', { encodedQueryParams: true });
     sw = create();
+  });
+  afterEach(() => {
+    nock.cleanAll();
+  });
+  after(() => {
+    nock.enableNetConnect();
   });
 
   describe('register()', () => {
@@ -104,6 +116,21 @@ describe('ServiceWorkerContainer', () => {
           expect(sw._sw.state).to.equal('activated');
           expect(sw.scope.foo).to.equal('foo');
           expect(sw.scope.bar).to.equal('bar');
+        });
+    });
+    it('should install and cache assets', () => {
+      fake
+        .get('/index.js')
+        .reply(200)
+        .get('/index.css')
+        .reply(200);
+      return sw.register('./fixtures/sw-install.js')
+        .then((registration) => sw.ready)
+        .then(() => {
+          const urls = Array.from(sw.scope.caches._caches.get('v1')._items.keys()).map((req) => req.url);
+
+          expect(sw._sw.state).to.equal('activated');
+          expect(urls).to.deep.equal(['/index.js', '/index.css']);
         });
     });
   });
