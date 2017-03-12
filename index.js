@@ -1,7 +1,7 @@
 'use strict';
 
-const fetch = require('node-fetch');
 const Headers = require('./lib/Headers');
+const MessageChannel = require('./lib/MessageChannel');
 const path = require('path');
 const Request = require('./lib/Request');
 const Response = require('./lib/Response');
@@ -10,8 +10,8 @@ const ServiceWorkerContainer = require('./lib/ServiceWorkerContainer');
 let activeContainer;
 
 module.exports = {
-  fetch,
   Headers,
+  MessageChannel,
   Request,
   Response,
 
