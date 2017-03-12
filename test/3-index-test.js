@@ -1,7 +1,7 @@
 'use strict';
 
 const { expect } = require('chai');
-const { create } = require('../index');
+const { connect, destroy } = require('../index');
 const nock = require('nock');
 
 let fake, sw;
@@ -13,10 +13,11 @@ describe('sw-test-env', () => {
   });
   beforeEach(() => {
     fake = nock('http://localhost:3333', { encodedQueryParams: true });
-    sw = create();
+    sw = connect();
   });
   afterEach(() => {
     nock.cleanAll();
+    destroy();
   });
   after(() => {
     nock.enableNetConnect();
@@ -57,6 +58,17 @@ describe('sw-test-env', () => {
       return sw.register('exports.foo = require("./fixtures/foo")\n')
         .then((registration) => {
           expect(sw.api.foo).to.equal('foo');
+        });
+    });
+  });
+
+  describe('unregister()', () => {
+    it('should unregister a registered ServiceWorker context', () => {
+      return sw.register('self.foo = "foo"\n')
+        .then((registration) => registration.unregister())
+        .then((success) => {
+          expect(success).to.equal(true);
+          expect(sw._sw).to.equal(null);
         });
     });
   });
@@ -116,6 +128,19 @@ describe('sw-test-env', () => {
           expect(sw._sw.state).to.equal('activated');
           expect(sw.scope.foo).to.equal('foo');
           expect(sw.scope.bar).to.equal('bar');
+        });
+    });
+    it('should execute install/activate lifecyle for multiple connected pages', () => {
+      const sw2 = connect();
+
+      return sw.register('./fixtures/sw.js')
+        .then((registration) => sw.ready)
+        .then((registration) => {
+          expect(sw._sw.state).to.equal('activated');
+          expect(sw2._sw.state).to.equal('activated');
+          expect(sw.scope.foo).to.equal('foo');
+          expect(sw2.scope.bar).to.equal('bar');
+          expect(sw.scope.clients._clients.length).to.equal(2);
         });
     });
     it('should install and cache assets', () => {
