@@ -9,10 +9,10 @@ let fake, sw;
 describe('sw-test-env', () => {
   before(() => {
     nock.disableNetConnect();
-    nock.enableNetConnect('127.0.0.1');
+    nock.enableNetConnect('localhost');
   });
   beforeEach(() => {
-    fake = nock('http://127.0.0.1:3333', { encodedQueryParams: true });
+    fake = nock('http://localhost:3333', { encodedQueryParams: true });
     sw = create();
   });
   afterEach(() => {
