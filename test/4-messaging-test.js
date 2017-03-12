@@ -1,13 +1,16 @@
 'use strict';
 
 const { expect } = require('chai');
-const { create, MessageChannel } = require('../index');
+const { connect, destroy, MessageChannel } = require('../index');
 
 let sw;
 
 describe('messaging', () => {
   beforeEach(() => {
-    sw = create();
+    sw = connect();
+  });
+  afterEach(() => {
+    destroy();
   });
 
   describe('unicast', () => {
@@ -35,31 +38,28 @@ describe('messaging', () => {
   });
 
   describe('broadcast', () => {
-    it.skip('should send message to all connected clients', () => {
+    it('should send message to all connected clients', () => {
+      const sw2 = connect();
       const data = { foo: 'foo' };
       let count = 0;
 
       return sw.register('\n')
         .then((registration) => sw.ready)
-        .then((registration) => sw.connect('/'))
-        .then((sw) => {
+        .then((registration) => {
           sw.addEventListener('message', (evt) => {
             count++;
             expect(evt.data).to.equal(data);
             expect(evt.source).to.equal(sw.controller);
-            console.log('first', count)
-            // expect(++count).to.equal(1);
+            expect(count).to.equal(1);
+          });
+          sw2.addEventListener('message', (evt) => {
+            count++;
+            expect(evt.data).to.equal(data);
+            expect(evt.source).to.equal(sw2.controller);
+            expect(count).to.equal(2);
           });
         })
-        .then(() => sw.connect('/'))
-        .then((sw) => {
-          sw.addEventListener('message', (evt) => {
-            count++;
-            expect(evt.data).to.equal(data);
-            expect(evt.source).to.equal(sw.controller);
-            console.log('second', count)
-            // expect(++count).to.equal(2);
-          });
+        .then(() => {
           sw.scope.clients.matchAll()
             .then((all) => {
               all.map((client) => client.postMessage(data));

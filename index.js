@@ -5,17 +5,18 @@ const fetchFactory = require('./lib/fetchFactory');
 const fs = require('fs');
 const Headers = require('./lib/Headers');
 const MessageChannel = require('./lib/MessageChannel');
+const MessageEvent = require('./lib/events/MessageEvent');
 const path = require('path');
 const Request = require('./lib/Request');
 const Response = require('./lib/Response');
-const ServiceWorker = require('./ServiceWorker');
+const ServiceWorker = require('./lib/ServiceWorker');
 const ServiceWorkerContainer = require('./lib/ServiceWorkerContainer');
-const ServiceWorkerGlobalScope = require('./ServiceWorkerGlobalScope');
-const ServiceWorkerRegistration = require('./ServiceWorkerRegistration');
+const ServiceWorkerGlobalScope = require('./lib/ServiceWorkerGlobalScope');
+const ServiceWorkerRegistration = require('./lib/ServiceWorkerRegistration');
 const url = require('url');
 const vm = require('vm');
 
-const DEFAULT_ORIGIN = 'http://localhost:3333';
+const DEFAULT_ORIGIN = 'http://localhost:3333/';
 const DEFAULT_SCOPE = './';
 
 const containers = new Set();
@@ -35,16 +36,27 @@ module.exports = {
    * @returns {ServiceWorkerContainer}
    */
   connect (url = DEFAULT_ORIGIN) {
-    const origin = getOrigin(url);
     const container = new ServiceWorkerContainer(url, register, trigger);
 
     containers.add(container);
 
+    // TODO: check if active context and apply state
+
     return container;
   },
 
-  destroy (url) {
-
+  /**
+   * Destroy all active containers/contexts
+   */
+  destroy () {
+    for (const container of containers) container._destroy();
+    for (const context of contexts.values()) {
+      context.registration._destroy();
+      context.sw._destroy();
+      context.scope._destroy();
+    }
+    containers.clear();
+    contexts.clear();
   }
 };
 
@@ -58,30 +70,92 @@ module.exports = {
  */
 function register (container, scriptURL, { scope = DEFAULT_SCOPE } = {}) {
   const origin = getOrigin(container._url);
-  const scoped = url.resolve(origin, scope);
+  const urlScope = url.resolve(origin, scope);
+  let context;
 
-  if (contexts.has(scoped)) {
+  if (contexts.has(urlScope)) {
+    context = contexts.get(urlScope);
+  } else {
+    const isPath = !~scriptURL.indexOf('\n');
+    const contextpath = isPath ? getResolvedPath(parentPath, scriptURL) : parentPath;
+    const fetch = fetchFactory(origin);
+    const registration = new ServiceWorkerRegistration(unregister.bind(this, urlScope));
+    const globalScope = new ServiceWorkerGlobalScope(registration, fetch);
+    const sw = new ServiceWorker(isPath ? scriptURL : '', swPostMessage.bind(this, container));
+    const script = isPath
+      ? fs.readFileSync(isRelativePath(scriptURL) ? path.resolve(parentPath, scriptURL) : scriptURL, 'utf8')
+      : scriptURL;
+    const scriptModule = { exports: {} };
+    const sandbox = vm.createContext(Object.assign(globalScope, {
+      clearImmediate,
+      clearInterval,
+      clearTimeout,
+      console,
+      fetch,
+      Request,
+      Response,
+      Headers,
+      module: scriptModule,
+      exports: scriptModule.exports,
+      process,
+      setImmediate,
+      setTimeout,
+      setInterval,
+      self: globalScope,
+      require: getRequire(contextpath)
+    }));
 
+    vm.runInContext(script, sandbox);
+
+    context = {
+      api: scriptModule.exports,
+      registration,
+      scope: sandbox,
+      sw
+    };
+    contexts.set(urlScope, context);
   }
 
-  const fetch = fetchFactory(origin);
-  const registration = new ServiceWorkerRegistration(unregister);
-  const globalScope = new ServiceWorkerGlobalScope(registration, fetch, clientPostMessage.bind(this, container));
-  const sw = new ServiceWorker(scriptURL, swPostMessage.bind(this, container));
-  const context = Object.assign({ registration, sw }, load(scriptURL, globalScope, fetch));
+  getContainersForUrlScope(urlScope)
+    .forEach((container) => {
+      container._registration = context.registration;
+      container._sw = context.sw;
+      container.api = context.api;
+      container.scope = context.scope;
 
-  contexts.set(scoped, context);
+      // Create client for container
+      container.scope.clients._connect(container._url, clientPostMessage.bind(this, container));
+    });
 
-  container._registration = registration;
-  container._sw = context.sw;
-  container.api = context.api;
-  container.scope = context.scope;
-
-  return Promise.resolve(registration);
+  return Promise.resolve(container._registration);
 }
 
-function unregister () {
+/**
+ * Unregister a ServiceWorker registration
+ * @param {String} contextKey
+ * @returns {Promise<Boolean>}
+ */
+function unregister (contextKey) {
+  const context = contexts.get(contextKey);
 
+  if (!context) return Promise.resolve(false);
+
+  getContainersForContext(context)
+    .forEach((container) => {
+      container._registration = null;
+      container._sw = null;
+      container.api = null;
+      container.scope = null;
+      container.controller = null;
+    });
+
+  context.registration._destroy();
+  context.sw._destroy();
+  context.scope._destroy();
+
+  contexts.delete(contextKey);
+
+  return Promise.resolve(true);
 }
 
 /**
@@ -92,8 +166,8 @@ function unregister () {
  */
 function clientPostMessage (container, message, transferList) {
   // TODO: handle onmessage format
-  if (this._listeners.message) {
-    this._listeners.message.forEach((fn) => fn(new MessageEvent(message, transferList, this.controller)));
+  if (container._listeners.message) {
+    container._listeners.message.forEach((fn) => fn(new MessageEvent(message, transferList, container.controller)));
   }
 }
 
@@ -104,80 +178,45 @@ function clientPostMessage (container, message, transferList) {
  * @param {Array} transferList
  */
 function swPostMessage (container, message, transferList) {
-  this.trigger('message', message, transferList);
-}
-
-/**
- * Load and execute script at 'scriptURL'
- * @param {String} scriptURL
- * @param {ServiceWorkerGlobalScope} globalScope
- * @param {Function} fetch
- * @returns {Object}
- */
-function load (scriptURL, globalScope, fetch) {
-  const isPath = !~scriptURL.indexOf('\n');
-  const contextpath = isPath ? getResolvedPath(parentPath, scriptURL) : parentPath;
-  const script = isPath
-    ? fs.readFileSync(isRelativePath(scriptURL) ? path.resolve(parentPath, scriptURL) : scriptURL, 'utf8')
-    : scriptURL;
-  const scriptModule = { exports: {} };
-  const sandbox = vm.createContext(Object.assign(globalScope, {
-    clearImmediate,
-    clearInterval,
-    clearTimeout,
-    console,
-    fetch,
-    Request,
-    Response,
-    Headers,
-    module: scriptModule,
-    exports: scriptModule.exports,
-    process,
-    setImmediate,
-    setTimeout,
-    setInterval,
-    self: globalScope,
-    require: getRequire(contextpath)
-  }));
-
-  vm.runInContext(script, sandbox);
-
-  return {
-    api: scriptModule.exports,
-    scope: sandbox
-  };
+  trigger(container, 'message', message, transferList);
 }
 
 /**
  * Trigger 'eventType' in current scope
+ * @param {ServiceWorkerContainer} container
  * @param {String} eventType
  * @returns {Promise}
  */
-function trigger (eventType, ...args) {
-  if (!this._registration) throw Error('no script registered yet');
+function trigger (container, eventType, ...args) {
+  const context = getContextForContainer(container);
+
+  if (!context) throw Error('no script registered yet');
+
+  const containers = getContainersForContext(context);
+
   switch (eventType) {
     case 'install':
-      setState('installing');
+      setState('installing', context, containers);
       break;
     case 'activate':
-      setState('activating');
+      setState('activating', context, containers);
       break;
   }
 
   const done = () => {
     switch (eventType) {
       case 'install':
-        setState('installed');
+        setState('installed', context, containers);
         break;
       case 'activate':
-        setState('activated');
+        setState('activated', context, containers);
         break;
     }
   };
 
   // TODO: handle alternative on* methods
-  if (this.scope._listeners[eventType]) {
-    return handle(this.scope._listeners, eventType, ...args)
+  if (context.scope._listeners[eventType]) {
+    return handle(context.scope._listeners, eventType, ...args)
       .then((result) => {
         done();
         return result;
@@ -192,34 +231,86 @@ function trigger (eventType, ...args) {
 /**
  * Store 'state'
  * @param {String} state
+ * @param {Object} context
+ * @param {Array} containers
  */
-function setState (state) {
+function setState (state, context, containers) {
   switch (state) {
     case 'installing':
-      if (this._sw.state != state) throw Error('ServiceWorker already installed');
-      this._registration.installing = this._sw;
-      this.controller = null;
+      if (context.sw.state != state) throw Error('ServiceWorker already installed');
+      context.registration.installing = context.sw;
+      setControllerForContainers(null, containers);
       break;
     case 'installed':
-      this._sw.state = state;
-      this._registration.installing = null;
-      this._registration.waiting = this._sw;
+      context.sw.state = state;
+      context.registration.installing = null;
+      context.registration.waiting = context.sw;
       break;
     case 'activating':
-      if (this._sw.state != 'installed') throw Error('ServiceWorker not yet installed');
-      this._sw.state = state;
-      this._registration.activating = this._sw;
-      this.controller = null;
+      if (context.sw.state != 'installed') throw Error('ServiceWorker not yet installed');
+      context.sw.state = state;
+      context.registration.activating = context.sw;
+      setControllerForContainers(null, containers);
       break;
     case 'activated':
-      this._sw.state = state;
-      this._registration.waiting = null;
-      this._registration.active = this._sw;
-      this.controller = this._sw;
+      context.sw.state = state;
+      context.registration.waiting = null;
+      context.registration.active = context.sw;
+      setControllerForContainers(context.sw, containers);
       break;
     default:
-      if (this._sw.state != 'activated') throw Error('ServiceWorker not yet active');
+      if (context.sw.state != 'activated') throw Error('ServiceWorker not yet active');
       break;
+  }
+}
+
+/**
+ * Set 'controller' for 'containers'
+ * @param {ServiceWorker} controller
+ * @param {Array} containers
+ */
+function setControllerForContainers (controller, containers) {
+  for (const container of containers) container.controller = controller;
+}
+
+/**
+ * Retrieve all containers associated with 'context'
+ * @param {Object} context
+ * @returns {Array}
+ */
+function getContainersForContext (context) {
+  let results = [];
+
+  for (const container of containers) {
+    if (container._sw === context.sw) results.push(container);
+  }
+
+  return results;
+}
+
+/**
+ * Retrieve all containers that fall under 'urlScope'
+ * @param {String} urlScope
+ * @returns {Array}
+ */
+function getContainersForUrlScope (urlScope) {
+  let results = [];
+
+  for (const container of containers) {
+    if (container._url.indexOf(urlScope) == 0) results.push(container);
+  }
+
+  return results;
+}
+
+/**
+ * Retrieve context for 'container'
+ * @param {ServiceWorkerContainer} container
+ * @returns {Object}
+ */
+function getContextForContainer (container) {
+  for (const context of contexts.values()) {
+    if (context.sw === container._sw) return context;
   }
 }
 
@@ -231,7 +322,7 @@ function setState (state) {
 function getOrigin (urlString) {
   const parsedUrl = url.parse(urlString);
 
-  return parsedUrl.protocol + parsedUrl.hostname + (parsedUrl.port ? `:${parsedUrl.port}` : '');
+  return `${parsedUrl.protocol}//${parsedUrl.host}`;
 }
 
 /**
