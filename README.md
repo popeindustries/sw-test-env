@@ -42,6 +42,7 @@ sw.register('./path/to/sw.js')
 ## Caveats
 
 - limited `Response` streaming and body conversion (uses the primitives from [node-fetch](https://github.com/bitinn/node-fetch))
+- `fetch` calls will be executed, so a request mocking tool like [nock](https://github.com/node-nock/nock) is recommended
 - not yet possible to cache based on `VARY` header
 - not tested against spec test suite or specific browser behaviour
 - bugs ¯\\_(ツ)_/¯
