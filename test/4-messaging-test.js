@@ -35,6 +35,19 @@ describe('messaging', () => {
           sw.controller.postMessage({ foo: 'foo' }, [mc.port2]);
         });
     });
+    it('should send ServiceWorker reply to client with onmessage', (done) => {
+      sw.register('self.addEventListener("message", (evt) => evt.ports[0].postMessage({ foo: "bar" }))\n')
+        .then((registration) => sw.ready)
+        .then((registration) => {
+          const mc = new MessageChannel();
+
+          mc.port1.onmessage = (evt) => {
+            expect(evt.data).to.deep.equal({ foo: 'bar' });
+            done();
+          };
+          sw.controller.postMessage({ foo: 'foo' }, [mc.port2]);
+        });
+    });
   });
 
   describe('broadcast', () => {
@@ -52,12 +65,12 @@ describe('messaging', () => {
             expect(evt.source).to.equal(sw.controller);
             expect(count).to.equal(1);
           });
-          sw2.addEventListener('message', (evt) => {
+          sw2.onmessage = (evt) => {
             count++;
             expect(evt.data).to.equal(data);
             expect(evt.source).to.equal(sw2.controller);
             expect(count).to.equal(2);
-          });
+          };
         })
         .then(() => {
           sw.scope.clients.matchAll()

@@ -111,6 +111,13 @@ describe('sw-test-env', () => {
           expect(sw.scope.foo).to.equal('foo');
         });
     });
+    it('should trigger a ServiceWorker on* handler', () => {
+      return sw.register('self.oninstall = (evt) => self.foo = "foo";\n')
+        .then((registration) => sw.trigger('install'))
+        .then(() => {
+          expect(sw.scope.foo).to.equal('foo');
+        });
+    });
     it('should trigger a ServiceWorker event handler with waitUntil()', () => {
       return sw.register('self.addEventListener("install", (evt) => evt.waitUntil(new Promise((resolve) => { self.foo = "foo"; resolve()})));\n')
         .then((registration) => sw.trigger('install'))

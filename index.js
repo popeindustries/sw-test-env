@@ -5,7 +5,6 @@ const fetchFactory = require('./lib/fetchFactory');
 const fs = require('fs');
 const Headers = require('./lib/Headers');
 const MessageChannel = require('./lib/MessageChannel');
-const MessageEvent = require('./lib/events/MessageEvent');
 const path = require('path');
 const Request = require('./lib/Request');
 const Response = require('./lib/Response');
@@ -165,10 +164,7 @@ function unregister (contextKey) {
  * @param {Array} transferList
  */
 function clientPostMessage (container, message, transferList) {
-  // TODO: handle onmessage format
-  if (container._listeners.message) {
-    container._listeners.message.forEach((fn) => fn(new MessageEvent(message, transferList, container.controller)));
-  }
+  handle(container, 'message', message, transferList, container.controller);
 }
 
 /**
@@ -214,18 +210,11 @@ function trigger (container, eventType, ...args) {
     }
   };
 
-  // TODO: handle alternative on* methods
-  if (context.scope._listeners[eventType]) {
-    return handle(context.scope._listeners, eventType, ...args)
-      .then((result) => {
-        done();
-        return result;
-      });
-  }
-
-  done();
-
-  return Promise.resolve();
+  return handle(context.scope, eventType, ...args)
+    .then((result) => {
+      done();
+      return result;
+    });
 }
 
 /**
@@ -235,6 +224,7 @@ function trigger (container, eventType, ...args) {
  * @param {Array} containers
  */
 function setState (state, context, containers) {
+  // TODO: emit serviceworker.onstatechange events
   switch (state) {
     case 'installing':
       if (context.sw.state != state) throw Error('ServiceWorker already installed');
