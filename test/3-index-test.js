@@ -125,6 +125,20 @@ describe('sw-test-env', () => {
           expect(sw.scope.foo).to.equal('foo');
         });
     });
+    it('should trigger a handled error event', () => {
+      return sw.register('self.onerror = (evt) => self.error = evt.message;\n')
+        .then((registration) => sw.trigger('error', Error('foo!')))
+        .catch((err) => {
+          expect(self.message).to.equal('foo!');
+        });
+    });
+    it('should trigger an unhandled error event', () => {
+      return sw.register('self.foo = "foo"\n')
+        .then((registration) => sw.trigger('error', Error('foo!')))
+        .catch((err) => {
+          expect(err.message).to.equal('foo!');
+        });
+    });
   });
 
   describe('ready', () => {
