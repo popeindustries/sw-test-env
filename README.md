@@ -59,6 +59,10 @@ Multiple connections to same/different origins are supported, with access to `Se
 
 Destroy all active `ServiceWorkerContainer` instances and their registered `ServiceWorker` instances. Should generally be called after each test (for example, in `afterEach()` when using Mocha/Jest/etc).
 
+#### **`Headers, MessageChannel, Request, Response`**
+
+Classes for creating instances of `Headers`, `MessageChannel`, `Request`, and `Response` to be used when interacting with the `ServiceWorker` context.
+
 ### ServiceWorkerContainer
 
 In addition to the behaviour documented [here](https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerContainer), a `ServiceWorkerContainer` instance returned by `connect()` has the following additions:
