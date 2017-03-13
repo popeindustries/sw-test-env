@@ -111,6 +111,18 @@ describe('sw-test-env', () => {
           expect(sw.scope.foo).to.equal('foo');
         });
     });
+    it('should trigger a ServiceWorker fetch handler', () => {
+      fake
+        .get('/index.js')
+        .reply(200);
+      return sw.register('self.addEventListener("fetch", (evt) => evt.respondWith(fetch(evt.request)));\n')
+        .then((registration) => sw.trigger('install'))
+        .then((result) => sw.trigger('activate'))
+        .then((result) => sw.trigger('fetch', '/index.js'))
+        .then((response) => {
+          expect(response.status).to.equal(200);
+        });
+    });
     it('should trigger a ServiceWorker on* handler', () => {
       return sw.register('self.oninstall = (evt) => self.foo = "foo";\n')
         .then((registration) => sw.trigger('install'))
