@@ -31,7 +31,6 @@
   "repository": "https://github.com/yr/sw-test-env.git",
   "license": "MIT",
   "scripts": {
-    "test": "NODE_ENV=test mocha test/*.js --reporter spec --bail",
-    "test:watch": "npm test -- --reporter min -w"
+    "test": "NODE_ENV=test mocha test/*.js --reporter spec --bail"
   }
 }
