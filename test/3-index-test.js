@@ -73,6 +73,12 @@ describe('sw-test-env', () => {
           expect(sw.scope.boo).to.equal('boo');
         });
     });
+    it('should define "location" object in ServiceWorker context', () => {
+      return sw.register('./fixtures/script.js')
+        .then((registration) => {
+          expect(sw.scope.location).to.have.property('href', 'http://localhost:3333/fixtures/script.js');
+        });
+    });
   });
 
   describe('unregister()', () => {

@@ -81,6 +81,7 @@ function register(container, scriptURL, { scope = DEFAULT_SCOPE } = {}) {
   } else {
     const isPath = !~scriptURL.indexOf('\n');
     const contextpath = isPath ? getResolvedPath(parentPath, scriptURL) : parentPath;
+    const location = url.parse(path.join(origin, isPath ? scriptURL : 'sw.js').replace(/:\//, '://'));
     const fetch = fetchFactory(origin);
     const registration = new ServiceWorkerRegistration(unregister.bind(null, urlScope));
     const globalScope = new ServiceWorkerGlobalScope(registration, fetch);
@@ -90,6 +91,7 @@ function register(container, scriptURL, { scope = DEFAULT_SCOPE } = {}) {
       : scriptURL;
     const scriptModule = { exports: {} };
 
+    location.origin = origin;
     context = Object.assign(globalScope, {
       clearImmediate,
       clearInterval,
@@ -100,6 +102,7 @@ function register(container, scriptURL, { scope = DEFAULT_SCOPE } = {}) {
       Response,
       Headers,
       indexedDB,
+      location,
       module: scriptModule,
       exports: scriptModule.exports,
       process,
@@ -109,7 +112,7 @@ function register(container, scriptURL, { scope = DEFAULT_SCOPE } = {}) {
       self: globalScope,
       require: getRequire(contextpath)
     });
-    context.importScripts = getImportScripts(context)
+    context.importScripts = getImportScripts(context);
 
     const sandbox = vm.createContext(context);
 
@@ -382,6 +385,7 @@ function getImportScripts(context) {
     const Response = context.Response;
     const Headers = context.Headers;
     const indexedDB = context.indexedDB;
+    const location = context.location;
     const module = context.module;
     const exports = context.exports;
     const process = context.process;
