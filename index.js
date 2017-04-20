@@ -33,10 +33,11 @@ module.exports = {
   /**
    * Create/retrieve ServiceWorkerContainer instance for 'domain'
    * @param {String} [url]
+   * @param {String} [webroot]
    * @returns {ServiceWorkerContainer}
    */
-  connect(url = DEFAULT_ORIGIN) {
-    const container = new ServiceWorkerContainer(url, register, trigger);
+  connect(url = DEFAULT_ORIGIN, webroot = parentPath) {
+    const container = new ServiceWorkerContainer(url, webroot, register, trigger);
 
     containers.add(container);
 
@@ -92,6 +93,7 @@ function register(container, scriptURL, { scope = DEFAULT_SCOPE } = {}) {
     const scriptModule = { exports: {} };
 
     location.origin = origin;
+    location._webroot = container._webroot;
     context = Object.assign(globalScope, {
       clearImmediate,
       clearInterval,
@@ -401,8 +403,7 @@ function getImportScripts(context) {
 
   return function importScripts(...scripts) {
     scripts.forEach(script => {
-      // TODO: handle web paths
-      importScript.call(context, fs.readFileSync(context.require.resolve(script), 'utf8'));
+      importScript.call(context, fs.readFileSync(path.join(context.location._webroot, script), 'utf8'));
     });
   };
 }

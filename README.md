@@ -49,9 +49,9 @@ sw.register('./path/to/sw.js')
 
 ## API
 
-#### **`connect(url: String): ServiceWorkerContainer`** 
+#### **`connect(url: String, webroot: String): ServiceWorkerContainer`**
 
-Create a new `ServiceWorkerContainer` instance at `url` (default is `http://localhost:3333/`). This is equivalent to opening a browser at `url` and accessing the `window.navigator.serviceworker` object. See [ServiceWorkerContainer](#serviceworkercontainer) below for additional behaviour. 
+Create a new `ServiceWorkerContainer` instance at `url` (default is `http://localhost:3333/`) with `webroot` (default is parent directory of current test file). This is equivalent to opening a browser at `url` and accessing the `window.navigator.serviceworker` object. See [ServiceWorkerContainer](#serviceworkercontainer) below for additional behaviour.
 
 Multiple connections to same/different origins are supported, with access to `ServiceWorker` instances determined by `scope`.
 
@@ -67,7 +67,7 @@ Classes for creating instances of `Headers`, `MessageChannel`, `Request`, and `R
 
 In addition to the behaviour documented [here](https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerContainer), a `ServiceWorkerContainer` instance returned by `connect()` has the following additions:
 
-#### **`sw.register(scriptURL: String, options: Object): Promise`** 
+#### **`sw.register(scriptURL: String, options: Object): Promise`**
 
 Load and execute `scriptURL` in a mock `ServiceWorker` context. `scriptURL` may be a relative or absolute filepath, or a string of code to be parsed and executed.
 
@@ -77,7 +77,7 @@ In addition to all the normal global apis available to a `ServiceWorker`, the lo
 
 - **`scope: String`** the `ServiceWorker` registration scope (defaults to `./`). Multiple `ServiceWorker` instances can be registered on the same origin with different scopes.
 
-#### **`sw.ready: Promise`** 
+#### **`sw.ready: Promise`**
 
 Force registered script to `install` and `activate`:
 
@@ -89,7 +89,7 @@ sw.register('./path/to/sw.js')
   });
 ```
 
-#### **`sw.trigger(eventType: String, ...args): Promise`** 
+#### **`sw.trigger(eventType: String, ...args): Promise`**
 
 Manually trigger an event (`install`, `activate`, `fetch`, `error`) in the `ServiceWorker` scope:
 
@@ -102,7 +102,7 @@ sw.register('./path/to/sw.js')
   });
 ```
 
-#### **`sw.scope: ServiceWorkerGlobalScope`** 
+#### **`sw.scope: ServiceWorkerGlobalScope`**
 
 Access the scope in which the registered script is running in:
 
@@ -117,7 +117,7 @@ sw.register('./path/to/sw.js')
   });
 ```
 
-#### **`sw.api: Object`** 
+#### **`sw.api: Object`**
 
 If a registered script exposes a module api (via `module` and `exports`), you can access the result as `api`:
 
