@@ -17,6 +17,7 @@
     "worker"
   ],
   "dependencies": {
+    "fake-indexeddb": "^1.0.11",
     "node-fetch": "^1.6.3"
   },
   "devDependencies": {

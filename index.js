@@ -4,6 +4,7 @@ const { handle } = require('./lib/events');
 const fetchFactory = require('./lib/fetchFactory');
 const fs = require('fs');
 const Headers = require('./lib/Headers');
+const indexedDB = require('fake-indexeddb');
 const MessageChannel = require('./lib/MessageChannel');
 const path = require('path');
 const Request = require('./lib/Request');
@@ -79,25 +80,13 @@ function register(container, scriptURL, { scope = DEFAULT_SCOPE } = {}) {
     context = contexts.get(urlScope);
   } else {
     const isPath = !~scriptURL.indexOf('\n');
-    const contextpath = isPath
-      ? getResolvedPath(parentPath, scriptURL)
-      : parentPath;
+    const contextpath = isPath ? getResolvedPath(parentPath, scriptURL) : parentPath;
     const fetch = fetchFactory(origin);
-    const registration = new ServiceWorkerRegistration(
-      unregister.bind(null, urlScope)
-    );
+    const registration = new ServiceWorkerRegistration(unregister.bind(null, urlScope));
     const globalScope = new ServiceWorkerGlobalScope(registration, fetch);
-    const sw = new ServiceWorker(
-      isPath ? scriptURL : '',
-      swPostMessage.bind(null, container)
-    );
+    const sw = new ServiceWorker(isPath ? scriptURL : '', swPostMessage.bind(null, container));
     const script = isPath
-      ? fs.readFileSync(
-          isRelativePath(scriptURL)
-            ? path.resolve(parentPath, scriptURL)
-            : scriptURL,
-          'utf8'
-        )
+      ? fs.readFileSync(isRelativePath(scriptURL) ? path.resolve(parentPath, scriptURL) : scriptURL, 'utf8')
       : scriptURL;
     const scriptModule = { exports: {} };
     const sandbox = vm.createContext(
@@ -110,6 +99,7 @@ function register(container, scriptURL, { scope = DEFAULT_SCOPE } = {}) {
         Request,
         Response,
         Headers,
+        indexedDB,
         module: scriptModule,
         exports: scriptModule.exports,
         process,
@@ -139,10 +129,7 @@ function register(container, scriptURL, { scope = DEFAULT_SCOPE } = {}) {
     container.scope = context.scope;
 
     // Create client for container
-    container.scope.clients._connect(
-      container._url,
-      clientPostMessage.bind(null, container)
-    );
+    container.scope.clients._connect(container._url, clientPostMessage.bind(null, container));
   });
 
   return Promise.resolve(container._registration);
@@ -222,7 +209,7 @@ function trigger(container, eventType, ...args) {
       setState('activating', context, containers);
       break;
     default:
-      // No state mgmt necessary
+    // No state mgmt necessary
   }
 
   const done = () => {
@@ -234,7 +221,7 @@ function trigger(container, eventType, ...args) {
         setState('activated', context, containers);
         break;
       default:
-        // No state mgmt necessary
+      // No state mgmt necessary
     }
   };
 
