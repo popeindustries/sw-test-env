@@ -89,27 +89,29 @@ function register(container, scriptURL, { scope = DEFAULT_SCOPE } = {}) {
       ? fs.readFileSync(isRelativePath(scriptURL) ? path.resolve(parentPath, scriptURL) : scriptURL, 'utf8')
       : scriptURL;
     const scriptModule = { exports: {} };
-    const sandbox = vm.createContext(
-      Object.assign(globalScope, {
-        clearImmediate,
-        clearInterval,
-        clearTimeout,
-        console,
-        fetch,
-        Request,
-        Response,
-        Headers,
-        indexedDB,
-        module: scriptModule,
-        exports: scriptModule.exports,
-        process,
-        setImmediate,
-        setTimeout,
-        setInterval,
-        self: globalScope,
-        require: getRequire(contextpath)
-      })
-    );
+
+    context = Object.assign(globalScope, {
+      clearImmediate,
+      clearInterval,
+      clearTimeout,
+      console,
+      fetch,
+      Request,
+      Response,
+      Headers,
+      indexedDB,
+      module: scriptModule,
+      exports: scriptModule.exports,
+      process,
+      setImmediate,
+      setTimeout,
+      setInterval,
+      self: globalScope,
+      require: getRequire(contextpath)
+    });
+    context.importScripts = getImportScripts(context)
+
+    const sandbox = vm.createContext(context);
 
     vm.runInContext(script, sandbox);
 
@@ -360,6 +362,45 @@ function getRequire(contextpath) {
   };
 
   return r;
+}
+
+/**
+ * Retrieve 'importScripts' function
+ * @param {Object} context
+ * @returns {Function}
+ */
+function getImportScripts(context) {
+  function importScript(script) {
+    const caches = context.caches;
+    const clients = context.clients;
+    const clearImmediate = context.clearImmediate;
+    const clearInterval = context.clearInterval;
+    const clearTimeout = context.clearTimeout;
+    const console = context.console;
+    const fetch = context.fetch;
+    const Request = context.Request;
+    const Response = context.Response;
+    const Headers = context.Headers;
+    const indexedDB = context.indexedDB;
+    const module = context.module;
+    const exports = context.exports;
+    const process = context.process;
+    const registration = context.registration;
+    const setImmediate = context.setImmediate;
+    const setTimeout = context.setTimeout;
+    const setInterval = context.setInterval;
+    const self = context;
+    const require = context.require;
+
+    eval(script);
+  }
+
+  return function importScripts(...scripts) {
+    scripts.forEach(script => {
+      // TODO: handle web paths
+      importScript.call(context, fs.readFileSync(context.require.resolve(script), 'utf8'));
+    });
+  };
 }
 
 /**

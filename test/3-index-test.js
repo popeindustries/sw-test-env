@@ -60,6 +60,19 @@ describe('sw-test-env', () => {
           expect(sw.api.foo).to.equal('foo');
         });
     });
+    it('should enable "importScripts()"', () => {
+      return sw.register('importScripts("./fixtures/bar")\n')
+        .then((registration) => {
+          expect(sw.scope.bar).to.equal('bar');
+        });
+    });
+    it('should enable "importScripts()" for multiple files', () => {
+      return sw.register('importScripts("./fixtures/bar.js", "./fixtures/boo.js")\n')
+        .then((registration) => {
+          expect(sw.scope.bar).to.equal('bar');
+          expect(sw.scope.boo).to.equal('boo');
+        });
+    });
   });
 
   describe('unregister()', () => {
