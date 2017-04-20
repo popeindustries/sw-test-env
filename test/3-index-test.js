@@ -60,8 +60,14 @@ describe('sw-test-env', () => {
           expect(sw.api.foo).to.equal('foo');
         });
     });
+    it('should define "location" object in ServiceWorker context', () => {
+      return sw.register('./fixtures/script.js')
+        .then((registration) => {
+          expect(sw.scope.location).to.have.property('href', 'http://localhost:3333/fixtures/script.js');
+        });
+    });
     it('should enable "importScripts()"', () => {
-      return sw.register('importScripts("./fixtures/bar")\n')
+      return sw.register('importScripts("./fixtures/bar.js")\n')
         .then((registration) => {
           expect(sw.scope.bar).to.equal('bar');
         });
@@ -71,12 +77,6 @@ describe('sw-test-env', () => {
         .then((registration) => {
           expect(sw.scope.bar).to.equal('bar');
           expect(sw.scope.boo).to.equal('boo');
-        });
-    });
-    it('should define "location" object in ServiceWorker context', () => {
-      return sw.register('./fixtures/script.js')
-        .then((registration) => {
-          expect(sw.scope.location).to.have.property('href', 'http://localhost:3333/fixtures/script.js');
         });
     });
   });
