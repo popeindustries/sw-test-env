@@ -37,6 +37,10 @@ module.exports = {
    * @returns {ServiceWorkerContainer}
    */
   connect(url = DEFAULT_ORIGIN, webroot = parentPath) {
+    if (url.slice(-1) !== '/') {
+      url += '/';
+    }
+
     const container = new ServiceWorkerContainer(url, webroot, register, trigger);
 
     containers.add(container);
