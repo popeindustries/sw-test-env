@@ -37,6 +37,8 @@ sw.register('./path/to/sw.js')
 - register multiple, scoped `ServiceWorker` instances
 - `postMessage` between clients and registered `ServiceWorker` instances
 - register for notifications and push messages to connected clients
+- `importScripts()`
+- use `indexedDB`
 - heavily spec compliant
 
 ## Caveats
@@ -45,7 +47,6 @@ sw.register('./path/to/sw.js')
 - `fetch` calls will be executed, so a request mocking tool like [nock](https://github.com/node-nock/nock) is recommended
 - not yet possible to cache based on `VARY` header
 - not tested against spec test suite or specific browser behaviour
-- bugs ¯\\_(ツ)_/¯
 
 ## API
 
