@@ -66,13 +66,13 @@ describe('sw-test-env', () => {
           expect(sw.scope.location).to.have.property('href', 'http://localhost:3333/fixtures/script.js');
         });
     });
-    it.only('should enable "importScripts()"', () => {
+    it('should enable "importScripts()"', () => {
       return sw.register('importScripts("/fixtures/bar.js")\n')
         .then((registration) => {
           expect(sw.scope.bar).to.equal('bar');
         });
     });
-    it.only('should enable "importScripts()" for multiple files', () => {
+    it('should enable "importScripts()" for multiple files', () => {
       return sw.register('importScripts("/fixtures/bar.js", "/fixtures/boo.js")\n')
         .then((registration) => {
           expect(sw.scope.bar).to.equal('bar');
