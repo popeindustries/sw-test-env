@@ -56,6 +56,8 @@ Create a new `ServiceWorkerContainer` instance at `url` (default is `http://loca
 
 Multiple connections to same/different origins are supported, with access to `ServiceWorker` instances determined by `scope`.
 
+**Note**: the `webroot` argument is used to define the root path for loading scripts with `importScripts()`.
+
 #### **`destroy()`**
 
 Destroy all active `ServiceWorkerContainer` instances and their registered `ServiceWorker` instances. Should generally be called after each test (for example, in `afterEach()` when using Mocha/Jest/etc).
