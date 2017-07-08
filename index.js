@@ -4,7 +4,7 @@ const { handle } = require('./lib/events');
 const fetchFactory = require('./lib/fetchFactory');
 const fs = require('fs');
 const Headers = require('./lib/Headers');
-const indexedDB = require('fake-indexeddb');
+const indexedDB = require('./lib/indexedDB');
 const MessageChannel = require('./lib/MessageChannel');
 const path = require('path');
 const Request = require('./lib/Request');
@@ -98,7 +98,7 @@ function register(container, scriptURL, { scope = DEFAULT_SCOPE } = {}) {
 
     location.origin = origin;
     location._webroot = container._webroot;
-    context = Object.assign(globalScope, {
+    context = Object.assign(globalScope, indexedDB, {
       clearImmediate,
       clearInterval,
       clearTimeout,
@@ -107,7 +107,6 @@ function register(container, scriptURL, { scope = DEFAULT_SCOPE } = {}) {
       Request,
       Response,
       Headers,
-      indexedDB,
       location,
       module: scriptModule,
       exports: scriptModule.exports,
@@ -391,6 +390,17 @@ function getImportScripts(context) {
     const Response = context.Response;
     const Headers = context.Headers;
     const indexedDB = context.indexedDB;
+    const IDBCursor = context.IDBCursor;
+    const IDBCursorWithValue = context.IDBCursorWithValue;
+    const IDBDatabase = context.IDBDatabase;
+    const IDBFactory = context.IDBFactory;
+    const IDBIndex = context.IDBIndex;
+    const IDBKeyRange = context.IDBKeyRange;
+    const IDBObjectStore = context.IDBObjectStore;
+    const IDBOpenDBRequest = context.IDBOpenDBRequest;
+    const IDBRequest = context.IDBRequest;
+    const IDBTransaction = context.IDBTransaction;
+    const IDBVersionChangeEvent = context.IDBVersionChangeEvent;
     const location = context.location;
     const module = context.module;
     const exports = context.exports;
