@@ -1,10 +1,11 @@
 'use strict';
 
 const { handle } = require('./lib/events');
+const createContext = require('./lib/createContext');
 const fetchFactory = require('./lib/fetchFactory');
 const fs = require('fs');
 const Headers = require('./lib/Headers');
-const indexedDB = require('fake-indexeddb');
+const importScripts = require('./lib/importScripts');
 const MessageChannel = require('./lib/MessageChannel');
 const path = require('path');
 const Request = require('./lib/Request');
@@ -21,7 +22,6 @@ const DEFAULT_SCOPE = './';
 
 const containers = new Set();
 const contexts = new Map();
-const nativeRequire = require;
 const parentPath = path.dirname(module.parent.filename);
 
 module.exports = {
@@ -85,47 +85,27 @@ function register(container, scriptURL, { scope = DEFAULT_SCOPE } = {}) {
     context = contexts.get(urlScope);
   } else {
     const isPath = !~scriptURL.indexOf('\n');
-    const contextpath = isPath ? getResolvedPath(parentPath, scriptURL) : parentPath;
-    const location = url.parse(path.join(origin, isPath ? scriptURL : 'sw.js').replace(/:\//, '://'));
+    const contextPath = isPath ? getResolvedPath(parentPath, scriptURL) : parentPath;
+    const contextLocation = url.parse(path.join(origin, isPath ? scriptURL : 'sw.js').replace(/:\//, '://'));
     const fetch = fetchFactory(origin);
     const registration = new ServiceWorkerRegistration(unregister.bind(null, urlScope));
     const globalScope = new ServiceWorkerGlobalScope(registration, fetch);
     const sw = new ServiceWorker(isPath ? scriptURL : '', swPostMessage.bind(null, container));
-    const script = isPath
+    let script = isPath
       ? fs.readFileSync(isRelativePath(scriptURL) ? path.resolve(parentPath, scriptURL) : scriptURL, 'utf8')
       : scriptURL;
-    const scriptModule = { exports: {} };
 
-    location.origin = origin;
-    location._webroot = container._webroot;
-    context = Object.assign(globalScope, {
-      clearImmediate,
-      clearInterval,
-      clearTimeout,
-      console,
-      fetch,
-      Request,
-      Response,
-      Headers,
-      indexedDB,
-      location,
-      module: scriptModule,
-      exports: scriptModule.exports,
-      process,
-      setImmediate,
-      setTimeout,
-      setInterval,
-      self: globalScope,
-      require: getRequire(contextpath)
-    });
-    context.importScripts = getImportScripts(context);
+    script = importScripts(script, container._webroot);
+    contextLocation.origin = origin;
+    contextLocation._webroot = container._webroot;
+    context = createContext(globalScope, contextLocation, contextPath, origin, fetch);
 
     const sandbox = vm.createContext(context);
 
     vm.runInContext(script, sandbox);
 
     context = {
-      api: scriptModule.exports,
+      api: context.module.exports,
       registration,
       scope: sandbox,
       sw
@@ -357,69 +337,13 @@ function getOrigin(urlString) {
 }
 
 /**
- * Retrieve 'require' function for 'contextpath'
- * @param {String} contextpath
- * @returns {Function}
- */
-function getRequire(contextpath) {
-  const r = function require(requiredpath) {
-    return nativeRequire(getResolvedPath(contextpath, requiredpath));
-  };
-
-  r.resolve = function resolve(requiredpath) {
-    return nativeRequire.resolve(getResolvedPath(contextpath, requiredpath));
-  };
-
-  return r;
-}
-
-/**
- * Retrieve 'importScripts' function
- * @param {Object} context
- * @returns {Function}
- */
-function getImportScripts(context) {
-  function importScript(script) {
-    const caches = context.caches;
-    const clients = context.clients;
-    const clearImmediate = context.clearImmediate;
-    const clearInterval = context.clearInterval;
-    const clearTimeout = context.clearTimeout;
-    const console = context.console;
-    const fetch = context.fetch;
-    const Request = context.Request;
-    const Response = context.Response;
-    const Headers = context.Headers;
-    const indexedDB = context.indexedDB;
-    const location = context.location;
-    const module = context.module;
-    const exports = context.exports;
-    const process = context.process;
-    const registration = context.registration;
-    const setImmediate = context.setImmediate;
-    const setTimeout = context.setTimeout;
-    const setInterval = context.setInterval;
-    const self = context;
-    const require = context.require;
-
-    eval(script);
-  }
-
-  return function importScripts(...scripts) {
-    scripts.forEach(script => {
-      importScript.call(context, fs.readFileSync(path.join(context.location._webroot, script), 'utf8'));
-    });
-  };
-}
-
-/**
  * Retrieve the fully resolved path
- * @param {String} contextpath
+ * @param {String} contextPath
  * @param {String} p
  * @returns {String}
  */
-function getResolvedPath(contextpath, p) {
-  return isRelativePath(p) ? path.resolve(contextpath, p) : p;
+function getResolvedPath(contextPath, p) {
+  return isRelativePath(p) ? path.resolve(contextPath, p) : p;
 }
 
 /**
