@@ -67,13 +67,13 @@ describe('sw-test-env', () => {
         });
     });
     it('should enable "importScripts()"', () => {
-      return sw.register('importScripts("/fixtures/bar.js")\n')
+      return sw.register('importScripts("/fixtures/bar.js")\nfoo;')
         .then((registration) => {
           expect(sw.scope.bar).to.equal('bar');
         });
     });
     it('should enable "importScripts()" for multiple files', () => {
-      return sw.register('importScripts("/fixtures/bar.js", "/fixtures/boo.js")\n')
+      return sw.register('importScripts("/fixtures/bar.js", "/fixtures/boo.js")\nfoo, bat')
         .then((registration) => {
           expect(sw.scope.bar).to.equal('bar');
           expect(sw.scope.boo).to.equal('boo');
