@@ -1,6 +1,7 @@
-importScripts('node_modules/workbox-sw/build/importScripts/workbox-sw.dev.v1.0.1.js');
+importScripts('node_modules/workbox-sw/build/importScripts/workbox-sw.prod.v1.0.1.js');
 
-const workboxSW = new WorkboxSW({
+self.workboxSW = new WorkboxSW({
   clientsClaim: true,
   skipWaiting: true,
 });
+

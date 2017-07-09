@@ -2,30 +2,20 @@
 
 const { expect } = require('chai');
 const { connect, destroy } = require('../index');
-const nock = require('nock');
-const path = require('path');
 
-let fake, sw;
+let sw;
 
 describe('workbox-sw', () => {
-  before(() => {
-    nock.disableNetConnect();
-    nock.enableNetConnect('localhost');
-  });
   beforeEach(() => {
-    fake = nock('http://localhost:3333', { encodedQueryParams: true });
     sw = connect('http://localhost:3333', process.cwd());
   });
   afterEach(() => {
-    nock.cleanAll();
-    destroy();
-  });
-  after(() => {
-    nock.enableNetConnect();
+     destroy();
   });
 
-  it.only('should', () => {
+  it('should initialize a workbox instance', () => {
     return sw.register('./fixtures/sw-workbox.js').then(registration => {
+      expect(sw.scope.workboxSW).to.have.property('_router');
     });
   });
 });
