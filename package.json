@@ -2,7 +2,7 @@
   "name": "sw-test-env",
   "description": "A sandboxed ServiceWorker environment for testing",
   "version": "1.1.2",
-  "author": "Alexander Pope <alexander.pope@nrk.no>",
+  "author": "Alexander Pope <alex@pope-industries.com>",
   "contributors": [
     "Ola Christian Gundelsby <ola.christian.gundelsby@nrk.no>"
   ],
@@ -30,7 +30,7 @@
     "node": ">=6"
   },
   "main": "index.js",
-  "repository": "https://github.com/yr/sw-test-env.git",
+  "repository": "https://github.com/popeindustries/sw-test-env.git",
   "license": "MIT",
   "scripts": {
     "test": "NODE_ENV=test mocha test/*.js --reporter spec --bail"
