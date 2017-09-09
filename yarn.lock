@@ -341,7 +341,7 @@ type-detect@^4.0.0:
   version "4.0.3"
   resolved "https://registry.yarnpkg.com/type-detect/-/type-detect-4.0.3.tgz#0e3f2670b44099b0b46c284d136a7ef49c74c2ea"
 
-workbox-sw@^2.0.1:
+workbox-sw@2.0.1:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/workbox-sw/-/workbox-sw-2.0.1.tgz#504c12d76c610d698f0b7329d3c39525ac542161"
 
