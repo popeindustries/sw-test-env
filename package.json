@@ -28,7 +28,7 @@
     "workbox-sw": "2.0.1"
   },
   "engines": {
-    "node": ">=6"
+    "node": ">=7"
   },
   "main": "index.js",
   "repository": "https://github.com/popeindustries/sw-test-env.git",
