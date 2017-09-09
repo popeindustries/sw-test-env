@@ -118,6 +118,15 @@ describe('caching', () => {
           expect(response).to.equal(res);
         });
       });
+      it('should retrieve matching response for fully qualified string request', () => {
+        const req = new Request('http://localhost:3333/foo.js');
+        const res = new Response('foo');
+
+        cache.put(req, res);
+        return cache.match('foo.js').then(response => {
+          expect(response).to.equal(res);
+        });
+      });
       it('should retrieve matching response, ignoring search query', () => {
         const req = new Request('foo.js?q=foo');
         const res = new Response('foo');
@@ -127,13 +136,22 @@ describe('caching', () => {
           expect(response).to.equal(res);
         });
       });
+      it('should retrieve matching response for fully qualified string request, ignoring search query', () => {
+        const req = new Request('http://localhost:3333/foo.js?q=foo');
+        const res = new Response('foo');
+
+        cache.put(req, res);
+        return cache.match('foo.js', { ignoreSearch: true }).then(response => {
+          expect(response).to.equal(res);
+        });
+      });
       it('should retrieve matching response, ignoring method');
       it('should retrieve matching response, ignoring VARY header');
     });
 
     describe('matchAll()', () => {
       it('should resolve with empty array if no match', () => {
-        return cache.matchAll([new Request('foo.js'), new Request('bar.js')]).then(responses => {
+        return cache.matchAll('foo.js').then(responses => {
           expect(responses).to.deep.equal([]);
         });
       });

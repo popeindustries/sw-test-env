@@ -89,7 +89,7 @@ function register(container, scriptURL, { scope = DEFAULT_SCOPE } = {}) {
     const contextLocation = url.parse(path.join(origin, isPath ? scriptURL : 'sw.js').replace(/:\//, '://'));
     const fetch = fetchFactory(origin);
     const registration = new ServiceWorkerRegistration(unregister.bind(null, urlScope));
-    const globalScope = new ServiceWorkerGlobalScope(registration, fetch);
+    const globalScope = new ServiceWorkerGlobalScope(registration, fetch, origin);
     const sw = new ServiceWorker(isPath ? scriptURL : '', swPostMessage.bind(null, container));
     let script = isPath
       ? fs.readFileSync(isRelativePath(scriptURL) ? path.resolve(parentPath, scriptURL) : scriptURL, 'utf8')

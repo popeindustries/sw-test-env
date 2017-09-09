@@ -207,7 +207,7 @@ describe('sw-test-env', () => {
           const urls = Array.from(sw.scope.caches._caches.get('v1')._items.keys()).map((req) => req.url);
 
           expect(sw._sw.state).to.equal('activated');
-          expect(urls).to.deep.equal(['/index.js', '/index.css']);
+          expect(urls).to.deep.equal(['http://localhost:3333/index.js', 'http://localhost:3333/index.css']);
         });
     });
   });
