@@ -22,7 +22,7 @@ const DEFAULT_SCOPE = './';
 
 const containers = new Set();
 const contexts = new Map();
-const parentPath = path.dirname(module.parent.filename);
+const testroot = findRootTestDir();
 
 module.exports = {
   Headers,
@@ -36,7 +36,7 @@ module.exports = {
    * @param {String} [webroot]
    * @returns {ServiceWorkerContainer}
    */
-  connect(url = DEFAULT_ORIGIN, webroot = parentPath) {
+  connect(url = DEFAULT_ORIGIN, webroot = testroot) {
     if (url.slice(-1) !== '/') {
       url += '/';
     }
@@ -85,14 +85,14 @@ function register(container, scriptURL, { scope = DEFAULT_SCOPE } = {}) {
     context = contexts.get(urlScope);
   } else {
     const isPath = !~scriptURL.indexOf('\n');
-    const contextPath = isPath ? getResolvedPath(parentPath, scriptURL) : parentPath;
+    const contextPath = isPath ? getResolvedPath(testroot, scriptURL) : testroot;
     const contextLocation = url.parse(path.join(origin, isPath ? scriptURL : 'sw.js').replace(/:\//, '://'));
     const fetch = fetchFactory(origin);
     const registration = new ServiceWorkerRegistration(unregister.bind(null, urlScope));
     const globalScope = new ServiceWorkerGlobalScope(registration, fetch, origin);
     const sw = new ServiceWorker(isPath ? scriptURL : '', swPostMessage.bind(null, container));
     let script = isPath
-      ? fs.readFileSync(isRelativePath(scriptURL) ? path.resolve(parentPath, scriptURL) : scriptURL, 'utf8')
+      ? fs.readFileSync(isRelativePath(scriptURL) ? path.resolve(testroot, scriptURL) : scriptURL, 'utf8')
       : scriptURL;
 
     script = importScripts(script, container._webroot);
@@ -353,4 +353,16 @@ function getResolvedPath(contextPath, p) {
  */
 function isRelativePath(p) {
   return p.indexOf('.') === 0;
+}
+
+function findRootTestDir() {
+  let main = module.parent;
+  let dir = '';
+
+  while (main) {
+    dir = path.dirname(main.filename);
+    main = main.parent.filename.includes('node_modules') ? null : main.parent;
+  }
+
+  return dir;
 }
