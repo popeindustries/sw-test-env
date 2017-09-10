@@ -361,7 +361,7 @@ function findRootTestDir() {
 
   while (main) {
     dir = path.dirname(main.filename);
-    main = main.parent.filename.includes('node_modules') ? null : main.parent;
+    main = !main.parent || main.parent.filename.includes('node_modules') ? null : main.parent;
   }
 
   return dir;
