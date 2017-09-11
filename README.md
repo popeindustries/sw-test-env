@@ -1,5 +1,5 @@
 [![NPM Version](https://img.shields.io/npm/v/sw-test-env.svg?style=flat)](https://npmjs.org/package/sw-test-env)
-[![Build Status](https://img.shields.io/travis/YR/sw-test-env.svg?style=flat)](https://travis-ci.org/YR/sw-test-env)
+[![Build Status](https://img.shields.io/travis/popeindustries/sw-test-env.svg?style=flat)](https://travis-ci.org/popeindustries/sw-test-env)
 
 # ServiceWorker Test Environment
 
