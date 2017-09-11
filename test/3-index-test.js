@@ -182,6 +182,16 @@ describe('sw-test-env', () => {
           expect(sw.scope.bar).to.equal('bar');
         });
     });
+    it('should ignore existing install/activate lifecyle', () => {
+      return sw.register('./fixtures/sw.js')
+        .then((registration) => sw.trigger('install'))
+        .then((registration) => sw.ready)
+        .then((registration) => {
+          expect(sw._sw.state).to.equal('activated');
+          expect(sw.scope.foo).to.equal('foo');
+          expect(sw.scope.bar).to.equal('bar');
+        });
+    });
     it('should execute install/activate lifecyle for multiple connected pages', () => {
       const sw2 = connect();
 

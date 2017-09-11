@@ -233,8 +233,8 @@ function setState(state, context, containers) {
   // TODO: emit serviceworker.onstatechange events
   switch (state) {
     case 'installing':
-      if (context.sw.state !== state) {
-        throw Error('ServiceWorker already installed');
+      if (context.sw.state !== 'installing') {
+        return;
       }
       context.registration.installing = context.sw;
       setControllerForContainers(null, containers);
@@ -245,7 +245,7 @@ function setState(state, context, containers) {
       context.registration.waiting = context.sw;
       break;
     case 'activating':
-      if (context.sw.state !== 'installed') {
+      if (!context.sw.state.includes('install')) {
         throw Error('ServiceWorker not yet installed');
       }
       context.sw.state = state;
