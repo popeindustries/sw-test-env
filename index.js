@@ -184,6 +184,7 @@ function swPostMessage(container, message, transferList) {
  * @returns {Promise}
  */
 function trigger(container, eventType, ...args) {
+  // TODO: fully qualify 'fetch' event urls
   const context = getContextForContainer(container);
 
   if (!context) {
