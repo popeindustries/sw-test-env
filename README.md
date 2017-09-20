@@ -11,10 +11,10 @@ Testing code written to run in a `ServiceWorker` is hard, and generally requires
 const assert = require('assert');
 const connect = require('sw-test-env').connect;
 // Equivalent to opening a browser window and accessing window.navigator.serviceWorker
-const sw = connect('http://localhost:3000');
+const sw = connect('http://localhost:3000', 'path/to/webroot');
 
 // Load and execute sw.js in a sandboxed ServiceWorker context
-sw.register('./path/to/sw.js')
+sw.register('sw.js')
   // Trigger the 'install' event and inspect the cache contents
   .then((registration) => sw.trigger('install'))
   // Inspect the cache
@@ -39,7 +39,6 @@ sw.register('./path/to/sw.js')
 - register for notifications and push messages to connected clients
 - `importScripts()`
 - use `indexedDB`
-- heavily spec compliant
 
 ## Caveats
 
@@ -50,15 +49,15 @@ sw.register('./path/to/sw.js')
 
 ## API
 
-#### **`connect(url: String, webroot: String): ServiceWorkerContainer`**
+#### **`connect(url: String, webroot: String): Promise<ServiceWorkerContainer>`**
 
-Create a new `ServiceWorkerContainer` instance at `url` (default is `http://localhost:3333/`) with `webroot` (default is parent directory of current test file). This is equivalent to opening a browser at `url` and accessing the `window.navigator.serviceworker` object. See [ServiceWorkerContainer](#serviceworkercontainer) below for additional behaviour.
+Create a new `ServiceWorkerContainer` instance at `url` (default is `http://localhost:3333/`) with `webroot` (default is current working directory). This is equivalent to opening a browser at `url` and accessing the `window.navigator.serviceworker` object. See [ServiceWorkerContainer](#serviceworkercontainer) below for additional behaviour.
 
 Multiple connections to same/different origins are supported, with access to `ServiceWorker` instances determined by `scope`.
 
-**Note**: the `webroot` argument is used to define the root path for loading scripts with `importScripts()`.
+**Note**: the `webroot` argument is used to resolve the path for registering the `ServiceWorker` and loading scripts with `importScripts()`.
 
-#### **`destroy()`**
+#### **`destroy(): Promise`**
 
 Destroy all active `ServiceWorkerContainer` instances and their registered `ServiceWorker` instances. Should generally be called after each test (for example, in `afterEach()` when using Mocha/Jest/etc).
 
@@ -70,7 +69,7 @@ Classes for creating instances of `Headers`, `MessageChannel`, `Request`, and `R
 
 In addition to the behaviour documented [here](https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerContainer), a `ServiceWorkerContainer` instance returned by `connect()` has the following additions:
 
-#### **`sw.register(scriptURL: String, options: Object): Promise`**
+#### **`sw.register(scriptURL: String, options: Object): Promise<Registration>`**
 
 Load and execute `scriptURL` in a mock `ServiceWorker` context. `scriptURL` may be a relative or absolute filepath, or a string of code to be parsed and executed.
 
@@ -85,7 +84,7 @@ In addition to all the normal global apis available to a `ServiceWorker`, the lo
 Force registered script to `install` and `activate`:
 
 ```js
-sw.register('./path/to/sw.js')
+sw.register('sw.js')
   .then((registration) => sw.ready)
   .then(() => {
     assert.equal(sw.controller.state, 'activated');
@@ -97,7 +96,7 @@ sw.register('./path/to/sw.js')
 Manually trigger an event (`install`, `activate`, `fetch`, `error`) in the `ServiceWorker` scope:
 
 ```js
-sw.register('./path/to/sw.js')
+sw.register('sw.js')
   .then((registration) => sw.ready)
   .then((registration) => sw.trigger('fetch', '/assets/index.js'))
   .then((response) => {
@@ -110,7 +109,7 @@ sw.register('./path/to/sw.js')
 Access the scope in which the registered script is running in:
 
 ```js
-sw.register('./path/to/sw.js')
+sw.register('sw.js')
   .then((registration) => sw.ready)
   .then(() => sw.scope.caches.open('v1'))
   .then((cache) => cache.keys())
@@ -125,7 +124,7 @@ sw.register('./path/to/sw.js')
 If a registered script exposes a module api (via `module` and `exports`), you can access the result as `api`:
 
 ```js
-sw.register('./path/to/sw-utils.js')
+sw.register('sw-utils.js')
   .then((registration) => sw.ready)
   .then((registration) => {
     sw.api.someUtilFn();
