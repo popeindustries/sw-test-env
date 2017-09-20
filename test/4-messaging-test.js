@@ -6,8 +6,11 @@ const { connect, destroy, MessageChannel } = require('../index');
 let sw;
 
 describe('messaging', () => {
-  beforeEach(() => {
-    sw = connect();
+  beforeEach((done) => {
+    connect().then(serviceWorker => {
+      sw = serviceWorker;
+      done();
+    });
   });
   afterEach(() => {
     destroy();

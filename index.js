@@ -34,9 +34,9 @@ module.exports = {
    * Create/retrieve ServiceWorkerContainer instance for 'domain'
    * @param {String} [url]
    * @param {String} [webroot]
-   * @returns {ServiceWorkerContainer}
+   * @returns {Promise<ServiceWorkerContainer>}
    */
-  connect(url = DEFAULT_ORIGIN, webroot = testroot) {
+  connect(url = DEFAULT_ORIGIN, webroot = process.cwd()) {
     if (url.slice(-1) !== '/') {
       url += '/';
     }
@@ -44,15 +44,13 @@ module.exports = {
     const container = new ServiceWorkerContainer(url, webroot, register, trigger);
 
     containers.add(container);
-
     // TODO: check if active context and apply state
-
-    return container;
+    return Promise.resolve(container);
   },
 
   /**
    * Destroy all active containers/contexts
-   * @returns {void}
+   * @returns {Promise}
    */
   destroy() {
     for (const container of containers) {
@@ -65,6 +63,7 @@ module.exports = {
     }
     containers.clear();
     contexts.clear();
+    return Promise.resolve();
   }
 };
 

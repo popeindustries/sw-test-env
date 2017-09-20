@@ -7,15 +7,18 @@ let sw;
 
 if (process.version.charAt(1) === '8') {
   describe('workbox-sw', () => {
-    beforeEach(() => {
-      sw = connect('http://localhost:3333', process.cwd());
+    beforeEach(done => {
+      connect('http://localhost:3333').then(serviceWorker => {
+        sw = serviceWorker;
+        done();
+      });
     });
     afterEach(() => {
       destroy();
     });
 
     it('should initialize a workbox instance', () => {
-      return sw.register('./fixtures/sw-workbox.js').then(registration => {
+      return sw.register('test/fixtures/sw-workbox.js').then(registration => {
         expect(sw.scope.workboxSW).to.have.property('_router');
       });
     });
