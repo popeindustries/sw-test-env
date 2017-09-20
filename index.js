@@ -22,7 +22,6 @@ const DEFAULT_SCOPE = './';
 
 const containers = new Set();
 const contexts = new Map();
-const testroot = findRootTestDir();
 
 module.exports = {
   Headers,
@@ -76,24 +75,27 @@ module.exports = {
  * @returns {Promise<ServiceWorkerRegistration>}
  */
 function register(container, scriptURL, { scope = DEFAULT_SCOPE } = {}) {
+  if (scriptURL.charAt(0) == '/') {
+    scriptURL = scriptURL.slice(1);
+  }
   const origin = getOrigin(container._url);
   const urlScope = url.resolve(origin, scope);
+  const webroot = container._webroot;
   let context;
 
   if (contexts.has(urlScope)) {
     context = contexts.get(urlScope);
   } else {
     const isPath = !~scriptURL.indexOf('\n');
-    const contextPath = isPath ? getResolvedPath(testroot, scriptURL) : testroot;
+    const contextPath = isPath ? getResolvedPath(webroot, scriptURL) : findRootTestDir();
     const contextLocation = url.parse(path.join(origin, isPath ? scriptURL : 'sw.js').replace(/:\//, '://'));
     const fetch = fetchFactory(origin);
     const registration = new ServiceWorkerRegistration(unregister.bind(null, urlScope));
     const globalScope = new ServiceWorkerGlobalScope(registration, fetch, origin);
     const sw = new ServiceWorker(isPath ? scriptURL : '', swPostMessage.bind(null, container));
     let script = isPath
-      ? fs.readFileSync(isRelativePath(scriptURL) ? path.resolve(testroot, scriptURL) : scriptURL, 'utf8')
+      ? fs.readFileSync(isRelativePath(scriptURL) ? path.resolve(webroot, scriptURL) : scriptURL, 'utf8')
       : scriptURL;
-
     script = importScripts(script, container._webroot);
     contextLocation.origin = origin;
     contextLocation._webroot = container._webroot;
@@ -352,7 +354,7 @@ function getResolvedPath(contextPath, p) {
  * @returns {Boolean}
  */
 function isRelativePath(p) {
-  return p.indexOf('.') === 0;
+  return !path.isAbsolute(p);
 }
 
 function findRootTestDir() {
