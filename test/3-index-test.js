@@ -63,7 +63,7 @@ describe('sw-test-env', () => {
       });
     });
     it('should enable "importScripts()"', () => {
-      return sw.register('importScripts("test/fixtures/bar.js")\nfoo;').then(registration => {
+      return sw.register('self.importScripts("test/fixtures/bar.js")\nfoo;').then(registration => {
         expect(sw.scope.bar).to.equal('bar');
       });
     });
