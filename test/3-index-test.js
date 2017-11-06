@@ -32,6 +32,13 @@ describe('sw-test-env', () => {
         expect(sw.scope.foo).to.equal('foo');
       });
     });
+    it.only('should execute script in IIFE in ServiceWorker context', () => {
+      return sw
+        .register('"use strict";\nvar $m = {};\n(function(){\n$m.foo = "foo";\nself.foo = $m.foo\n})()')
+        .then(registration => {
+          expect(sw.scope.foo).to.equal('foo');
+        });
+    });
     it('should execute script path in ServiceWorker context', () => {
       return sw.register('test/fixtures/script.js').then(registration => {
         expect(sw.scope.foo).to.equal('foo');
