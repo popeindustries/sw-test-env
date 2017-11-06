@@ -1,21 +1,10 @@
 {
   "name": "sw-test-env",
   "description": "A sandboxed ServiceWorker environment for testing",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "author": "Alexander Pope <alex@pope-industries.com>",
-  "contributors": [
-    "Ola Christian Gundelsby <ola.christian.gundelsby@nrk.no>"
-  ],
-  "keywords": [
-    "mock",
-    "pseudo",
-    "sandbox",
-    "service worker",
-    "ServiceWorker",
-    "test",
-    "testing",
-    "worker"
-  ],
+  "contributors": ["Ola Christian Gundelsby <ola.christian.gundelsby@nrk.no>"],
+  "keywords": ["mock", "pseudo", "sandbox", "service worker", "ServiceWorker", "test", "testing", "worker"],
   "dependencies": {
     "fake-indexeddb": "^2.0.3",
     "mime-types": "^2.1.17",
