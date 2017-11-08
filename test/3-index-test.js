@@ -13,7 +13,7 @@ describe('sw-test-env', () => {
   });
   beforeEach(done => {
     fake = nock('http://localhost:3333', { encodedQueryParams: true });
-    connect().then(serviceWorker => {
+    connect('http://localhost:3333').then(serviceWorker => {
       sw = serviceWorker;
       done();
     });
@@ -29,10 +29,11 @@ describe('sw-test-env', () => {
   describe('register()', () => {
     it('should execute script in ServiceWorker context', () => {
       return sw.register('self.foo = "foo"\n').then(registration => {
+        expect(registration.scope).to.equal('http://localhost:3333/');
         expect(sw.scope.foo).to.equal('foo');
       });
     });
-    it.only('should execute script in IIFE in ServiceWorker context', () => {
+    it('should execute script in IIFE in ServiceWorker context', () => {
       return sw
         .register('"use strict";\nvar $m = {};\n(function(){\n$m.foo = "foo";\nself.foo = $m.foo\n})()')
         .then(registration => {

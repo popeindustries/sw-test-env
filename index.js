@@ -90,7 +90,7 @@ function register(container, scriptURL, { scope = DEFAULT_SCOPE } = {}) {
     const contextPath = isPath ? getResolvedPath(webroot, scriptURL) : findRootTestDir();
     const contextLocation = url.parse(path.join(origin, isPath ? scriptURL : 'sw.js').replace(/:\//, '://'));
     const fetch = fetchFactory(origin);
-    const registration = new ServiceWorkerRegistration(unregister.bind(null, urlScope));
+    const registration = new ServiceWorkerRegistration(urlScope, unregister.bind(null, urlScope));
     const globalScope = new ServiceWorkerGlobalScope(registration, fetch, origin);
     const sw = new ServiceWorker(isPath ? scriptURL : '', swPostMessage.bind(null, container));
     let script = isPath
