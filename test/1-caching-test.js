@@ -64,22 +64,33 @@ describe('caching', () => {
 
         const req = new Request('http://localhost:3333/foo');
 
-        return cache.add(req).then(() => cache._items.get(req).json()).then(body => {
-          expect(body).to.deep.equal({ foo: 'foo' });
-        });
+        return cache
+          .add(req)
+          .then(() => cache._items.get(req).json())
+          .then((body) => {
+            expect(body).to.deep.equal({ foo: 'foo' });
+          });
       });
     });
 
     describe('addAll()', () => {
       it('should fetch and store multiple request urls', () => {
-        fake.get('/foo').reply(200, { foo: 'foo' }).get('/bar').reply(200, { bar: 'bar' });
+        fake
+          .get('/foo')
+          .reply(200, { foo: 'foo' })
+          .get('/bar')
+          .reply(200, { bar: 'bar' });
 
         return cache.addAll(['http://localhost:3333/foo', 'http://localhost:3333/bar']).then(() => {
           expect(cache._items.size).to.equal(2);
         });
       });
       it('should fetch and store multiple requests', () => {
-        fake.get('/foo').reply(200, { foo: 'foo' }).get('/bar').reply(200, { bar: 'bar' });
+        fake
+          .get('/foo')
+          .reply(200, { foo: 'foo' })
+          .get('/bar')
+          .reply(200, { bar: 'bar' });
 
         const req1 = new Request('http://localhost:3333/foo');
         const req2 = new Request('http://localhost:3333/bar');
@@ -87,7 +98,7 @@ describe('caching', () => {
         return cache
           .addAll([req1, req2])
           .then(() => Promise.all([cache._items.get(req1).json(), cache._items.get(req2).json()]))
-          .then(bodies => {
+          .then((bodies) => {
             expect(bodies[0]).to.deep.equal({ foo: 'foo' });
             expect(bodies[1]).to.deep.equal({ bar: 'bar' });
           });
@@ -96,7 +107,7 @@ describe('caching', () => {
 
     describe('match()', () => {
       it('should resolve with "undefined" if no match', () => {
-        return cache.match(new Request('foo.js')).then(response => {
+        return cache.match(new Request('foo.js')).then((response) => {
           expect(response).to.equal(undefined);
         });
       });
@@ -105,7 +116,7 @@ describe('caching', () => {
         const res = new Response('foo');
 
         cache.put(req, res);
-        return cache.match(req).then(response => {
+        return cache.match(req).then((response) => {
           expect(response).to.equal(res);
         });
       });
@@ -114,7 +125,7 @@ describe('caching', () => {
         const res = new Response('foo');
 
         cache.put(req, res);
-        return cache.match('foo.js').then(response => {
+        return cache.match('foo.js').then((response) => {
           expect(response).to.equal(res);
         });
       });
@@ -123,7 +134,7 @@ describe('caching', () => {
         const res = new Response('foo');
 
         cache.put(req, res);
-        return cache.match('foo.js').then(response => {
+        return cache.match('foo.js').then((response) => {
           expect(response).to.equal(res);
         });
       });
@@ -132,7 +143,7 @@ describe('caching', () => {
         const res = new Response('foo');
 
         cache.put(req, res);
-        return cache.match(new Request('foo.js'), { ignoreSearch: true }).then(response => {
+        return cache.match(new Request('foo.js'), { ignoreSearch: true }).then((response) => {
           expect(response).to.equal(res);
         });
       });
@@ -141,7 +152,7 @@ describe('caching', () => {
         const res = new Response('foo');
 
         cache.put(req, res);
-        return cache.match('foo.js', { ignoreSearch: true }).then(response => {
+        return cache.match('foo.js', { ignoreSearch: true }).then((response) => {
           expect(response).to.equal(res);
         });
       });
@@ -151,7 +162,7 @@ describe('caching', () => {
 
     describe('matchAll()', () => {
       it('should resolve with empty array if no match', () => {
-        return cache.matchAll('foo.js').then(responses => {
+        return cache.matchAll('foo.js').then((responses) => {
           expect(responses).to.deep.equal([]);
         });
       });
@@ -160,7 +171,7 @@ describe('caching', () => {
         const res = new Response('foo');
 
         cache.put(req, res);
-        return cache.matchAll(req).then(responses => {
+        return cache.matchAll(req).then((responses) => {
           expect(responses[0]).to.equal(res);
         });
       });
@@ -172,7 +183,7 @@ describe('caching', () => {
 
         cache.put(req1, res1);
         cache.put(req2, res2);
-        return cache.matchAll(req1, { ignoreSearch: true }).then(responses => {
+        return cache.matchAll(req1, { ignoreSearch: true }).then((responses) => {
           expect(responses).to.have.length(2);
           expect(responses[0]).to.equal(res1);
           expect(responses[1]).to.equal(res2);
@@ -184,7 +195,7 @@ describe('caching', () => {
 
     describe('delete()', () => {
       it('should resolve with "false" if no match', () => {
-        return cache.delete(new Request('foo.js')).then(success => {
+        return cache.delete(new Request('foo.js')).then((success) => {
           expect(success).to.equal(false);
         });
       });
@@ -193,7 +204,7 @@ describe('caching', () => {
         const res = new Response('foo');
 
         cache.put(req, res);
-        return cache.delete(req).then(success => {
+        return cache.delete(req).then((success) => {
           expect(success).to.equal(true);
           expect(cache._items.size).to.equal(0);
         });
@@ -206,7 +217,7 @@ describe('caching', () => {
 
         cache.put(req1, res1);
         cache.put(req2, res2);
-        return cache.delete(req1, { ignoreSearch: true }).then(success => {
+        return cache.delete(req1, { ignoreSearch: true }).then((success) => {
           expect(success).to.equal(true);
           expect(cache._items.size).to.equal(0);
         });
@@ -217,7 +228,7 @@ describe('caching', () => {
 
     describe('keys()', () => {
       it('should resolve with empty array if no cached items', () => {
-        return cache.keys().then(results => {
+        return cache.keys().then((results) => {
           expect(results).to.deep.equal([]);
         });
       });
@@ -226,7 +237,7 @@ describe('caching', () => {
         const res = new Response('foo');
 
         cache.put(req, res);
-        return cache.keys().then(results => {
+        return cache.keys().then((results) => {
           expect(results).to.deep.equal([req]);
         });
       });
@@ -235,7 +246,7 @@ describe('caching', () => {
         const res = new Response('foo');
 
         cache.put(req, res);
-        return cache.keys(req).then(results => {
+        return cache.keys(req).then((results) => {
           expect(results).to.deep.equal([req]);
         });
       });
@@ -247,7 +258,7 @@ describe('caching', () => {
 
         cache.put(req1, res1);
         cache.put(req2, res2);
-        return cache.keys(req1, { ignoreSearch: true }).then(results => {
+        return cache.keys(req1, { ignoreSearch: true }).then((results) => {
           expect(results).to.deep.equal([req1, req2]);
         });
       });
@@ -266,22 +277,25 @@ describe('caching', () => {
 
     describe('open()', () => {
       it("should create new cache instance if it doesn't exist", () => {
-        return caches.open('foo').then(cache => {
+        return caches.open('foo').then((cache) => {
           expect(cache).to.have.property('name', 'foo');
           expect(caches._caches.size).to.equal(1);
         });
       });
       it('should return existing cache instance', () => {
-        return caches.open('foo').then(cache => caches.open('foo')).then(cache => {
-          expect(cache).to.have.property('name', 'foo');
-          expect(caches._caches.size).to.equal(1);
-        });
+        return caches
+          .open('foo')
+          .then((cache) => caches.open('foo'))
+          .then((cache) => {
+            expect(cache).to.have.property('name', 'foo');
+            expect(caches._caches.size).to.equal(1);
+          });
       });
     });
 
     describe('match()', () => {
       it('should resolve with "undefined" if no match', () => {
-        return caches.match(new Request('foo.js')).then(response => {
+        return caches.match(new Request('foo.js')).then((response) => {
           expect(response).to.equal(undefined);
         });
       });
@@ -291,9 +305,9 @@ describe('caching', () => {
 
         return caches
           .open('foo')
-          .then(cache => cache.put(req, res))
+          .then((cache) => cache.put(req, res))
           .then(() => caches.match(req))
-          .then(response => {
+          .then((response) => {
             expect(response).to.equal(res);
           });
       });
@@ -303,14 +317,14 @@ describe('caching', () => {
 
         return caches
           .open('foo')
-          .then(cache => cache.put(req, res))
+          .then((cache) => cache.put(req, res))
           .then(() => caches.match(req, { cacheName: 'foo' }))
-          .then(response => {
+          .then((response) => {
             expect(response).to.equal(res);
           });
       });
-      it('should reject if passed "options.cacheName" doesn\'t exist', done => {
-        caches.match(new Request('foo.js'), { cacheName: 'foo' }).catch(err => {
+      it('should reject if passed "options.cacheName" doesn\'t exist', (done) => {
+        caches.match(new Request('foo.js'), { cacheName: 'foo' }).catch((err) => {
           expect(err.message).to.equal("cache with name 'foo' not found");
           done();
         });
@@ -319,40 +333,49 @@ describe('caching', () => {
 
     describe('has()', () => {
       it('should resolve with "false" if cache doesn\'t exist', () => {
-        return caches.has('foo').then(success => {
+        return caches.has('foo').then((success) => {
           expect(success).to.equal(false);
         });
       });
       it('should resolve with "true" if cache exists', () => {
-        return caches.open('foo').then(cache => caches.has('foo')).then(success => {
-          expect(success).to.equal(true);
-        });
+        return caches
+          .open('foo')
+          .then((cache) => caches.has('foo'))
+          .then((success) => {
+            expect(success).to.equal(true);
+          });
       });
     });
 
     describe('keys()', () => {
       it('should resolve with an empty array if no caches', () => {
-        return caches.keys().then(keys => {
+        return caches.keys().then((keys) => {
           expect(keys).to.deep.equal([]);
         });
       });
       it('should resolve with an array of cache keys', () => {
-        return caches.open('foo').then(cache => caches.keys()).then(keys => {
-          expect(keys).to.deep.equal(['foo']);
-        });
+        return caches
+          .open('foo')
+          .then((cache) => caches.keys())
+          .then((keys) => {
+            expect(keys).to.deep.equal(['foo']);
+          });
       });
     });
 
     describe('delete()', () => {
       it('should resolve with "false" if no caches', () => {
-        return caches.delete('foo').then(success => {
+        return caches.delete('foo').then((success) => {
           expect(success).to.equal(false);
         });
       });
       it('should resolve with "true" if successfully removed', () => {
-        return caches.open('foo').then(cache => caches.delete('foo')).then(success => {
-          expect(success).to.equal(true);
-        });
+        return caches
+          .open('foo')
+          .then((cache) => caches.delete('foo'))
+          .then((success) => {
+            expect(success).to.equal(true);
+          });
       });
     });
   });

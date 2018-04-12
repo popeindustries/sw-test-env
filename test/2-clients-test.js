@@ -41,8 +41,7 @@ describe('clients', () => {
         it('should be created with url from openWindow argument', () => {
           const expected = 'https://whatever.com:8000/lol';
 
-          return unit.openWindow(expected)
-          .then((client) => {
+          return unit.openWindow(expected).then((client) => {
             expect(client.url).to.equal(expected);
           });
         });
@@ -51,18 +50,15 @@ describe('clients', () => {
 
     describe('get()', () => {
       it('should return a Promise resolving to the Client with the given id', () => {
-        return unit.openWindow('https://xfactor.com/')
-        .then((expected) => {
-          return unit.get(expected.id)
-          .then((actual) => {
+        return unit.openWindow('https://xfactor.com/').then((expected) => {
+          return unit.get(expected.id).then((actual) => {
             expect(actual).to.equal(expected);
           });
         });
       });
 
       it('should return a Promise resolving to undefined if a Client with the given id cant be found', () => {
-        return unit.get('lol')
-        .then((actual) => {
+        return unit.get('lol').then((actual) => {
           expect(actual).to.be.an('undefined');
         });
       });
@@ -83,10 +79,8 @@ describe('clients', () => {
         expect(actual).to.be.a('promise');
       });
       it('Promise should resolve to an array containing the clients controlled by the current service worker', () => {
-        return unit.openWindow('https://powerslave.com')
-        .then((expected) => {
-          return unit.matchAll()
-          .then((clients) => {
+        return unit.openWindow('https://powerslave.com').then((expected) => {
+          return unit.matchAll().then((clients) => {
             expect(clients).to.be.an('array');
             expect(clients).to.include(expected);
           });

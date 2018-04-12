@@ -5,8 +5,10 @@ self.addEventListener('install', (evt) => {
 });
 
 self.addEventListener('activate', (evt) => {
-  evt.waitUntil(new Promise((resolve) => {
-    self.bar = 'bar';
-    setTimeout(resolve, 100);
-  }));
+  evt.waitUntil(
+    new Promise((resolve) => {
+      self.bar = 'bar';
+      setTimeout(resolve, 100);
+    })
+  );
 });

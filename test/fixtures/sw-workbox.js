@@ -1,6 +1,9 @@
-importScripts('node_modules/workbox-sw/build/importScripts/workbox-sw.prod.v2.1.1.js');
+/* eslint-disable no-undef */
+importScripts('node_modules/workbox-sw/build/workbox-sw.js');
 
-self.workboxSW = new WorkboxSW({
-  clientsClaim: true,
-  skipWaiting: true
+workbox.core.setCacheNameDetails({
+  prefix: 'my-app',
+  suffix: 'v1'
 });
+
+self.wbx = workbox;

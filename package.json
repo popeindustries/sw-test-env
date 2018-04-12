@@ -4,17 +4,33 @@
   "version": "2.0.2",
   "author": "Alexander Pope <alex@pope-industries.com>",
   "contributors": ["Ola Christian Gundelsby <ola.christian.gundelsby@nrk.no>"],
-  "keywords": ["mock", "pseudo", "sandbox", "service worker", "ServiceWorker", "test", "testing", "worker"],
+  "keywords": [
+    "mock",
+    "pseudo",
+    "sandbox",
+    "service worker",
+    "ServiceWorker",
+    "test",
+    "testing",
+    "worker"
+  ],
   "dependencies": {
     "fake-indexeddb": "^2.0.3",
     "mime-types": "^2.1.17",
-    "node-fetch": "^1.7.3"
+    "node-fetch": "^2.1.2"
   },
   "devDependencies": {
+    "babel-eslint": "^8.2.2",
     "chai": "^4.1.2",
-    "mocha": "^4.0.1",
+    "eslint": "^4.19.1",
+    "eslint-config-prettier": "^2.9.0",
+    "eslint-plugin-prettier": "^2.6.0",
+    "husky": "^0.14.3",
+    "lint-staged": "^7.0.4",
+    "mocha": "^5.0.5",
     "nock": "^9.0.14",
-    "workbox-sw": "^2.1.1"
+    "prettier": "^1.12.0",
+    "workbox-sw": "^3.0.1"
   },
   "engines": {
     "node": ">=7"
@@ -23,6 +39,9 @@
   "repository": "https://github.com/popeindustries/sw-test-env.git",
   "license": "MIT",
   "scripts": {
+    "format": "prettier --write './{lib,test}/**/*.js'",
+    "lint": "eslint './{lib,test}/**/*.js'",
+    "precommit": "lint-staged && yarn run test",
     "test": "NODE_ENV=test mocha test/*.js --reporter spec --bail"
   }
 }

@@ -7,7 +7,7 @@ let sw;
 
 describe('messaging', () => {
   beforeEach((done) => {
-    connect().then(serviceWorker => {
+    connect().then((serviceWorker) => {
       sw = serviceWorker;
       done();
     });
@@ -18,7 +18,8 @@ describe('messaging', () => {
 
   describe('unicast', () => {
     it('should send client message to ServiceWorker', () => {
-      return sw.register('self.addEventListener("message", (evt) => self.message = evt.data)\n')
+      return sw
+        .register('self.addEventListener("message", (evt) => self.message = evt.data)\n')
         .then((registration) => sw.ready)
         .then((registration) => {
           sw.controller.postMessage({ foo: 'foo' });
@@ -26,7 +27,10 @@ describe('messaging', () => {
         });
     });
     it('should send ServiceWorker reply to client', (done) => {
-      sw.register('self.addEventListener("message", (evt) => evt.ports[0].postMessage({ foo: "bar" }))\n')
+      sw
+        .register(
+          'self.addEventListener("message", (evt) => evt.ports[0].postMessage({ foo: "bar" }))\n'
+        )
         .then((registration) => sw.ready)
         .then((registration) => {
           const mc = new MessageChannel();
@@ -39,7 +43,10 @@ describe('messaging', () => {
         });
     });
     it('should send ServiceWorker reply to client with onmessage', (done) => {
-      sw.register('self.addEventListener("message", (evt) => evt.ports[0].postMessage({ foo: "bar" }))\n')
+      sw
+        .register(
+          'self.addEventListener("message", (evt) => evt.ports[0].postMessage({ foo: "bar" }))\n'
+        )
         .then((registration) => sw.ready)
         .then((registration) => {
           const mc = new MessageChannel();
@@ -59,7 +66,8 @@ describe('messaging', () => {
       const data = { foo: 'foo' };
       let count = 0;
 
-      return sw.register('\n')
+      return sw
+        .register('\n')
         .then((registration) => sw.ready)
         .then((registration) => {
           sw.addEventListener('message', (evt) => {
@@ -76,10 +84,9 @@ describe('messaging', () => {
           };
         })
         .then(() => {
-          sw.scope.clients.matchAll()
-            .then((all) => {
-              all.map((client) => client.postMessage(data));
-            });
+          sw.scope.clients.matchAll().then((all) => {
+            all.map((client) => client.postMessage(data));
+          });
         });
     });
   });
