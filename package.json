@@ -1,7 +1,7 @@
 {
   "name": "sw-test-env",
   "description": "A sandboxed ServiceWorker environment for testing",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "author": "Alexander Pope <alex@pope-industries.com>",
   "contributors": ["Ola Christian Gundelsby <ola.christian.gundelsby@nrk.no>"],
   "keywords": [
