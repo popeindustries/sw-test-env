@@ -67,6 +67,11 @@ describe('sw-test-env', () => {
         expect(sw.api.foo).to.equal('foo');
       });
     });
+    it('should resolve relative requires while executing module script as file in ServiceWorker context', () => {
+      return sw.register('test/fixtures/dep.js').then((registration) => {
+        expect(sw.api).to.equal('foo');
+      });
+    });
     it('should define "location" object in ServiceWorker context', () => {
       return sw.register('test/fixtures/script.js').then((registration) => {
         expect(sw.scope.location).to.have.property(

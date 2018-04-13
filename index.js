@@ -88,13 +88,18 @@ function register(container, scriptURL, { scope = DEFAULT_SCOPE } = {}) {
   } else {
     const isPath = !~scriptURL.indexOf('\n');
     const contextPath = isPath ? getResolvedPath(webroot, scriptURL) : findRootTestDir();
-    const contextLocation = url.parse(path.join(origin, isPath ? scriptURL : 'sw.js').replace(/:\//, '://'));
+    const contextLocation = url.parse(
+      path.join(origin, isPath ? scriptURL : 'sw.js').replace(/:\//, '://')
+    );
     const fetch = fetchFactory(origin);
     const registration = new ServiceWorkerRegistration(urlScope, unregister.bind(null, urlScope));
     const globalScope = new ServiceWorkerGlobalScope(registration, fetch, origin);
     const sw = new ServiceWorker(isPath ? scriptURL : '', swPostMessage.bind(null, container));
     let script = isPath
-      ? fs.readFileSync(isRelativePath(scriptURL) ? path.resolve(webroot, scriptURL) : scriptURL, 'utf8')
+      ? fs.readFileSync(
+          isRelativePath(scriptURL) ? path.resolve(webroot, scriptURL) : scriptURL,
+          'utf8'
+        )
       : scriptURL;
     script = importScripts(script, container._webroot);
     contextLocation.origin = origin;
@@ -114,7 +119,7 @@ function register(container, scriptURL, { scope = DEFAULT_SCOPE } = {}) {
     contexts.set(urlScope, context);
   }
 
-  getContainersForUrlScope(urlScope).forEach(container => {
+  getContainersForUrlScope(urlScope).forEach((container) => {
     container._registration = context.registration;
     container._sw = context.sw;
     container.api = context.api;
@@ -139,7 +144,7 @@ function unregister(contextKey) {
     return Promise.resolve(false);
   }
 
-  getContainersForContext(context).forEach(container => {
+  getContainersForContext(context).forEach((container) => {
     container._registration = null;
     container._sw = null;
     container.api = null;
@@ -218,7 +223,7 @@ function trigger(container, eventType, ...args) {
     }
   };
 
-  return handle(context.scope, eventType, ...args).then(result => {
+  return handle(context.scope, eventType, ...args).then((result) => {
     done();
     return result;
   });
