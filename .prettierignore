@@ -1,0 +1,4 @@
+package.json
+*.min.js
+.DS_Store
+.dvlp/

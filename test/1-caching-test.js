@@ -1,11 +1,11 @@
 'use strict';
 
 const { expect } = require('chai');
-const Cache = require('../lib/Cache');
-const CacheStorage = require('../lib/CacheStorage');
+const Cache = require('../src/Cache');
+const CacheStorage = require('../src/CacheStorage');
 const nock = require('nock');
-const Request = require('../lib/Request');
-const Response = require('../lib/Response');
+const Request = require('../src/Request');
+const Response = require('../src/Response');
 
 let cache, caches, fake;
 
@@ -75,22 +75,14 @@ describe('caching', () => {
 
     describe('addAll()', () => {
       it('should fetch and store multiple request urls', () => {
-        fake
-          .get('/foo')
-          .reply(200, { foo: 'foo' })
-          .get('/bar')
-          .reply(200, { bar: 'bar' });
+        fake.get('/foo').reply(200, { foo: 'foo' }).get('/bar').reply(200, { bar: 'bar' });
 
         return cache.addAll(['http://localhost:3333/foo', 'http://localhost:3333/bar']).then(() => {
           expect(cache._items.size).to.equal(2);
         });
       });
       it('should fetch and store multiple requests', () => {
-        fake
-          .get('/foo')
-          .reply(200, { foo: 'foo' })
-          .get('/bar')
-          .reply(200, { bar: 'bar' });
+        fake.get('/foo').reply(200, { foo: 'foo' }).get('/bar').reply(200, { bar: 'bar' });
 
         const req1 = new Request('http://localhost:3333/foo');
         const req2 = new Request('http://localhost:3333/bar');

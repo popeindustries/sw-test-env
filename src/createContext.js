@@ -93,7 +93,7 @@ module.exports = function createContext(globalScope, contextlocation, contextpat
       online: true,
       permissions: 'not implemented',
       storage: 'not implemented',
-      userAgent: 'sw-test-env'
+      userAgent: 'sw-test-env',
     },
     Notification,
     NotificationEvent,
@@ -120,7 +120,7 @@ module.exports = function createContext(globalScope, contextlocation, contextpat
     setTimeout,
     setInterval,
     self: globalScope,
-    require: getRequire(contextpath)
+    require: getRequire(contextpath),
   });
 
   return context;

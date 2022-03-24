@@ -25,7 +25,7 @@ module.exports = class PushSubscription {
   toJSON() {
     return {
       endpoint: this.endpoint,
-      options: this.options
+      options: this.options,
     };
   }
 

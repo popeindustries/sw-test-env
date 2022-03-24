@@ -9,7 +9,7 @@ const PushEvent = require('./PushEvent');
 module.exports = {
   create,
   handle,
-  mixin
+  mixin,
 };
 
 /**

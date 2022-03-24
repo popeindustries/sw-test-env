@@ -17,8 +17,8 @@ module.exports = class FetchEvent extends ExtendableEvent {
     if (typeof request === 'string') {
       request = new Request(request, {
         headers: {
-          accept: contentType(path.extname(request.split('?')[0]) || 'html')
-        }
+          accept: contentType(path.extname(request.split('?')[0]) || 'html'),
+        },
       });
     }
     this.request = request;

@@ -1,19 +1,19 @@
 'use strict';
 
-const { handle } = require('./lib/events');
-const createContext = require('./lib/createContext');
-const fetchFactory = require('./lib/fetchFactory');
+const { handle } = require('./src/events');
+const createContext = require('./src/createContext');
+const fetchFactory = require('./src/fetchFactory');
 const fs = require('fs');
-const Headers = require('./lib/Headers');
-const importScripts = require('./lib/importScripts');
-const MessageChannel = require('./lib/MessageChannel');
+const Headers = require('./src/Headers');
+const importScripts = require('./src/importScripts');
+const MessageChannel = require('./src/MessageChannel');
 const path = require('path');
-const Request = require('./lib/Request');
-const Response = require('./lib/Response');
-const ServiceWorker = require('./lib/ServiceWorker');
-const ServiceWorkerContainer = require('./lib/ServiceWorkerContainer');
-const ServiceWorkerGlobalScope = require('./lib/ServiceWorkerGlobalScope');
-const ServiceWorkerRegistration = require('./lib/ServiceWorkerRegistration');
+const Request = require('./src/Request');
+const Response = require('./src/Response');
+const ServiceWorker = require('./src/ServiceWorker');
+const ServiceWorkerContainer = require('./src/ServiceWorkerContainer');
+const ServiceWorkerGlobalScope = require('./src/ServiceWorkerGlobalScope');
+const ServiceWorkerRegistration = require('./src/ServiceWorkerRegistration');
 const url = require('url');
 const vm = require('vm');
 
@@ -63,7 +63,7 @@ module.exports = {
     containers.clear();
     contexts.clear();
     return Promise.resolve();
-  }
+  },
 };
 
 /**
@@ -88,18 +88,13 @@ function register(container, scriptURL, { scope = DEFAULT_SCOPE } = {}) {
   } else {
     const isPath = !~scriptURL.indexOf('\n');
     const contextPath = isPath ? getResolvedPath(webroot, scriptURL) : findRootTestDir();
-    const contextLocation = url.parse(
-      path.join(origin, isPath ? scriptURL : 'sw.js').replace(/:\//, '://')
-    );
+    const contextLocation = url.parse(path.join(origin, isPath ? scriptURL : 'sw.js').replace(/:\//, '://'));
     const fetch = fetchFactory(origin);
     const registration = new ServiceWorkerRegistration(urlScope, unregister.bind(null, urlScope));
     const globalScope = new ServiceWorkerGlobalScope(registration, fetch, origin);
     const sw = new ServiceWorker(isPath ? scriptURL : '', swPostMessage.bind(null, container));
     let script = isPath
-      ? fs.readFileSync(
-          isRelativePath(scriptURL) ? path.resolve(webroot, scriptURL) : scriptURL,
-          'utf8'
-        )
+      ? fs.readFileSync(isRelativePath(scriptURL) ? path.resolve(webroot, scriptURL) : scriptURL, 'utf8')
       : scriptURL;
     script = importScripts(script, container._webroot);
     contextLocation.origin = origin;
@@ -114,7 +109,7 @@ function register(container, scriptURL, { scope = DEFAULT_SCOPE } = {}) {
       api: context.module.exports,
       registration,
       scope: sandbox,
-      sw
+      sw,
     };
     contexts.set(urlScope, context);
   }
