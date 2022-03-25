@@ -1,35 +1,35 @@
-'use strict';
+import Cache from '../src/api/Cache.js';
+import CacheStorage from '../src/api/CacheStorage.js';
+import { expect } from 'chai';
+import { testServer } from 'dvlp/dvlp-test.js';
 
-const { expect } = require('chai');
-const Cache = require('../src/Cache');
-const CacheStorage = require('../src/CacheStorage');
-const nock = require('nock');
-const Request = require('../src/Request');
-const Response = require('../src/Response');
-
-let cache, caches, fake;
+/** @type { Cache } */
+let cache;
+/** @type { CacheStorage } */
+let caches;
+/** @type { import('dvlp').TestServer } */
+let fake;
 
 describe('caching', () => {
   describe('Cache', () => {
     before(() => {
-      nock.disableNetConnect();
-      nock.enableNetConnect('localhost');
+      testServer.disableNetwork();
     });
-    beforeEach(() => {
-      fake = nock('http://localhost:3333', { encodedQueryParams: true });
+    beforeEach(async () => {
+      fake = await testServer({ port: 3333 });
       cache = new Cache('test');
     });
     afterEach(() => {
-      nock.cleanAll();
+      fake.destroy();
       cache._destroy();
     });
     after(() => {
-      nock.enableNetConnect();
+      testServer.enableNetwork();
     });
 
     describe('put()', () => {
       it('should store a request/response', () => {
-        const req = new Request('foo.js');
+        const req = new Request('http://localhost:3333/foo.js');
         const res = new Response('foo');
 
         cache.put(req, res);
@@ -37,9 +37,9 @@ describe('caching', () => {
         expect(cache._items.get(req)).to.equal(res);
       });
       it('should overwrite an existing request/response', () => {
-        const req1 = new Request('foo.js');
+        const req1 = new Request('http://localhost:3333/foo.js');
         const res1 = new Response('foo1');
-        const req2 = new Request('foo.js');
+        const req2 = new Request('http://localhost:3333/foo.js');
         const res2 = new Response('foo2');
 
         cache.put(req1, res1);
@@ -53,14 +53,14 @@ describe('caching', () => {
 
     describe('add()', () => {
       it('should fetch and store a request url', () => {
-        fake.get('/foo').reply(200, { foo: 'foo' });
+        fake.mockResponse('/foo', { body: { foo: 'foo' } });
 
         return cache.add('http://localhost:3333/foo').then(() => {
           expect(cache._items.size).to.equal(1);
         });
       });
       it('should fetch and store a request', () => {
-        fake.get('/foo').reply(200, { foo: 'foo' });
+        fake.mockResponse('/foo', { body: { foo: 'foo' } });
 
         const req = new Request('http://localhost:3333/foo');
 
@@ -75,14 +75,16 @@ describe('caching', () => {
 
     describe('addAll()', () => {
       it('should fetch and store multiple request urls', () => {
-        fake.get('/foo').reply(200, { foo: 'foo' }).get('/bar').reply(200, { bar: 'bar' });
+        fake.mockResponse('/foo', { body: { foo: 'foo' } });
+        fake.mockResponse('/bar', { body: { bar: 'bar' } });
 
         return cache.addAll(['http://localhost:3333/foo', 'http://localhost:3333/bar']).then(() => {
           expect(cache._items.size).to.equal(2);
         });
       });
       it('should fetch and store multiple requests', () => {
-        fake.get('/foo').reply(200, { foo: 'foo' }).get('/bar').reply(200, { bar: 'bar' });
+        fake.mockResponse('/foo', { body: { foo: 'foo' } });
+        fake.mockResponse('/bar', { body: { bar: 'bar' } });
 
         const req1 = new Request('http://localhost:3333/foo');
         const req2 = new Request('http://localhost:3333/bar');
@@ -99,12 +101,12 @@ describe('caching', () => {
 
     describe('match()', () => {
       it('should resolve with "undefined" if no match', () => {
-        return cache.match(new Request('foo.js')).then((response) => {
+        return cache.match(new Request('http://localhost:3333/foo.js')).then((response) => {
           expect(response).to.equal(undefined);
         });
       });
       it('should retrieve matching response', () => {
-        const req = new Request('foo.js');
+        const req = new Request('http://localhost:3333/foo.js');
         const res = new Response('foo');
 
         cache.put(req, res);
@@ -113,15 +115,6 @@ describe('caching', () => {
         });
       });
       it('should retrieve matching response when passed string request', () => {
-        const req = new Request('foo.js');
-        const res = new Response('foo');
-
-        cache.put(req, res);
-        return cache.match('foo.js').then((response) => {
-          expect(response).to.equal(res);
-        });
-      });
-      it('should retrieve matching response for fully qualified string request', () => {
         const req = new Request('http://localhost:3333/foo.js');
         const res = new Response('foo');
 
@@ -131,11 +124,11 @@ describe('caching', () => {
         });
       });
       it('should retrieve matching response, ignoring search query', () => {
-        const req = new Request('foo.js?q=foo');
+        const req = new Request('http://localhost:3333/foo.js?q=foo');
         const res = new Response('foo');
 
         cache.put(req, res);
-        return cache.match(new Request('foo.js'), { ignoreSearch: true }).then((response) => {
+        return cache.match(new Request('http://localhost:3333/foo.js'), { ignoreSearch: true }).then((response) => {
           expect(response).to.equal(res);
         });
       });
@@ -144,7 +137,7 @@ describe('caching', () => {
         const res = new Response('foo');
 
         cache.put(req, res);
-        return cache.match('foo.js', { ignoreSearch: true }).then((response) => {
+        return cache.match('http://localhost:3333/foo.js', { ignoreSearch: true }).then((response) => {
           expect(response).to.equal(res);
         });
       });
@@ -154,12 +147,12 @@ describe('caching', () => {
 
     describe('matchAll()', () => {
       it('should resolve with empty array if no match', () => {
-        return cache.matchAll('foo.js').then((responses) => {
+        return cache.matchAll('http://localhost:3333/foo.js').then((responses) => {
           expect(responses).to.deep.equal([]);
         });
       });
       it('should retrieve matching responses', () => {
-        const req = new Request('foo.js');
+        const req = new Request('http://localhost:3333/foo.js');
         const res = new Response('foo');
 
         cache.put(req, res);
@@ -168,9 +161,9 @@ describe('caching', () => {
         });
       });
       it('should retrieve matching responses, ignoring search query', () => {
-        const req1 = new Request('foo.js?q=foo');
+        const req1 = new Request('http://localhost:3333/foo.js?q=foo');
         const res1 = new Response('foo');
-        const req2 = new Request('foo.js?q=bar');
+        const req2 = new Request('http://localhost:3333/foo.js?q=bar');
         const res2 = new Response('bar');
 
         cache.put(req1, res1);
@@ -187,12 +180,12 @@ describe('caching', () => {
 
     describe('delete()', () => {
       it('should resolve with "false" if no match', () => {
-        return cache.delete(new Request('foo.js')).then((success) => {
+        return cache.delete(new Request('http://localhost:3333/foo.js')).then((success) => {
           expect(success).to.equal(false);
         });
       });
       it('should remove matching request', () => {
-        const req = new Request('foo.js');
+        const req = new Request('http://localhost:3333/foo.js');
         const res = new Response('foo');
 
         cache.put(req, res);
@@ -202,9 +195,9 @@ describe('caching', () => {
         });
       });
       it('should remove matching requests, ignoring search query', () => {
-        const req1 = new Request('foo.js?q=foo');
+        const req1 = new Request('http://localhost:3333/foo.js?q=foo');
         const res1 = new Response('foo');
-        const req2 = new Request('foo.js?q=bar');
+        const req2 = new Request('http://localhost:3333/foo.js?q=bar');
         const res2 = new Response('bar');
 
         cache.put(req1, res1);
@@ -225,7 +218,7 @@ describe('caching', () => {
         });
       });
       it('should resolve with all keys', () => {
-        const req = new Request('foo.js');
+        const req = new Request('http://localhost:3333/foo.js');
         const res = new Response('foo');
 
         cache.put(req, res);
@@ -234,7 +227,7 @@ describe('caching', () => {
         });
       });
       it('should resolve with keys matching passed request', () => {
-        const req = new Request('foo.js');
+        const req = new Request('http://localhost:3333/foo.js');
         const res = new Response('foo');
 
         cache.put(req, res);
@@ -243,9 +236,9 @@ describe('caching', () => {
         });
       });
       it('should resolve with keys matching passed request, ignoring search query', () => {
-        const req1 = new Request('foo.js?q=foo');
+        const req1 = new Request('http://localhost:3333/foo.js?q=foo');
         const res1 = new Response('foo');
-        const req2 = new Request('foo.js?q=bar');
+        const req2 = new Request('http://localhost:3333/foo.js?q=bar');
         const res2 = new Response('bar');
 
         cache.put(req1, res1);
@@ -261,7 +254,7 @@ describe('caching', () => {
 
   describe('CacheStorage', () => {
     beforeEach(() => {
-      caches = new CacheStorage();
+      caches = new CacheStorage('http://localhost:3333/');
     });
     afterEach(() => {
       caches._destroy();
@@ -287,12 +280,12 @@ describe('caching', () => {
 
     describe('match()', () => {
       it('should resolve with "undefined" if no match', () => {
-        return caches.match(new Request('foo.js')).then((response) => {
+        return caches.match(new Request('http://localhost:3333/foo.js')).then((response) => {
           expect(response).to.equal(undefined);
         });
       });
       it('should resolve with response if match', () => {
-        const req = new Request('foo.js');
+        const req = new Request('http://localhost:3333/foo.js');
         const res = new Response('foo');
 
         return caches
@@ -304,7 +297,7 @@ describe('caching', () => {
           });
       });
       it('should resolve with response if match and "options.cacheName"', () => {
-        const req = new Request('foo.js');
+        const req = new Request('http://localhost:3333/foo.js');
         const res = new Response('foo');
 
         return caches
@@ -316,7 +309,7 @@ describe('caching', () => {
           });
       });
       it('should reject if passed "options.cacheName" doesn\'t exist', (done) => {
-        caches.match(new Request('foo.js'), { cacheName: 'foo' }).catch((err) => {
+        caches.match(new Request('http://localhost:3333/foo.js'), { cacheName: 'foo' }).catch((err) => {
           expect(err.message).to.equal("cache with name 'foo' not found");
           done();
         });

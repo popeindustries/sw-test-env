@@ -1,149 +1,85 @@
-'use strict';
+import { connect, destroy } from '../src/index.js';
+import { expect } from 'chai';
+import { testServer } from 'dvlp/dvlp-test.js';
 
-const { expect } = require('chai');
-const { connect, destroy } = require('../index');
-const nock = require('nock');
-
-let fake, sw;
+/** @type { import('dvlp').TestServer } */
+let fake;
+/** @type { import('../src/api/ServiceWorkerContainer' ).default } */
+let sw;
 
 describe('sw-test-env', () => {
   before(() => {
-    nock.disableNetConnect();
-    nock.enableNetConnect('localhost');
+    testServer.disableNetwork();
   });
-  beforeEach((done) => {
-    fake = nock('http://localhost:3333', { encodedQueryParams: true });
-    connect('http://localhost:3333').then((serviceWorker) => {
-      sw = serviceWorker;
-      done();
-    });
+  beforeEach(async () => {
+    fake = await testServer({ port: 3333 });
+    sw = await connect('http://localhost:3333', 'test/fixtures');
   });
   afterEach(() => {
-    nock.cleanAll();
     destroy();
   });
   after(() => {
-    nock.enableNetConnect();
+    testServer.enableNetwork();
   });
 
   describe('register()', () => {
-    it('should execute script in ServiceWorker context', () => {
-      return sw.register('self.foo = "foo"\n').then((registration) => {
-        expect(registration.scope).to.equal('http://localhost:3333/');
-        expect(sw.scope.foo).to.equal('foo');
-      });
+    it('should execute script path in ServiceWorker context', async () => {
+      const registration = await sw.register('sw-empty.js');
+      expect(registration.scope).to.equal('http://localhost:3333/');
+      expect(sw.scope.caches).to.exist;
     });
-    it('should execute script in IIFE in ServiceWorker context', () => {
-      return sw
-        .register(
-          '"use strict";\nvar $m = {};\n(function(){\n$m.foo = "foo";\nself.foo = $m.foo\n})()'
-        )
-        .then((registration) => {
-          expect(sw.scope.foo).to.equal('foo');
-        });
+    it('should define "location" object in ServiceWorker context', async () => {
+      await sw.register('sw-empty.js');
+      expect(sw.scope.location).to.have.property('href', 'http://localhost:3333/sw-empty.js');
     });
-    it('should execute script path in ServiceWorker context', () => {
-      return sw.register('test/fixtures/script.js').then((registration) => {
-        expect(sw.scope.foo).to.equal('foo');
-      });
-    });
-    it('should execute module script in ServiceWorker context', () => {
-      return sw.register('exports.foo = "foo"\n').then((registration) => {
-        expect(sw.api.foo).to.equal('foo');
-      });
-    });
-    it('should execute module script path in ServiceWorker context', () => {
-      return sw.register('test/fixtures/module.js').then((registration) => {
-        expect(sw.api.foo).to.equal('foo');
-      });
-    });
-    it('should resolve relative requires while executing script in ServiceWorker context', () => {
-      return sw.register('self.foo = require("./fixtures/foo")\n').then((registration) => {
-        expect(sw.scope.foo).to.equal('foo');
-      });
-    });
-    it('should resolve relative requires while executing module script in ServiceWorker context', () => {
-      return sw.register('exports.foo = require("./fixtures/foo")\n').then((registration) => {
-        expect(sw.api.foo).to.equal('foo');
-      });
-    });
-    it('should resolve relative requires while executing module script as file in ServiceWorker context', () => {
-      return sw.register('test/fixtures/dep.js').then((registration) => {
-        expect(sw.api).to.equal('foo');
-      });
-    });
-    it('should define "location" object in ServiceWorker context', () => {
-      return sw.register('test/fixtures/script.js').then((registration) => {
-        expect(sw.scope.location).to.have.property(
-          'href',
-          'http://localhost:3333/test/fixtures/script.js'
+    it('should not allow "importScripts()"', async () => {
+      try {
+        await sw.register('sw-import-scripts.js');
+        expect(true).to.be.false;
+      } catch (err) {
+        expect(err).to.exist;
+        expect(err).to.have.property(
+          'message',
+          '"importScripts" not supported in esm ServiceWorker. Use esm "import" statement instead',
         );
-      });
-    });
-    it('should enable "importScripts()"', () => {
-      return sw
-        .register('self.importScripts("test/fixtures/bar.js")\nfoo;')
-        .then((registration) => {
-          expect(sw.scope.bar).to.equal('bar');
-        });
-    });
-    it('should enable "importScripts()" for multiple files', () => {
-      return sw
-        .register('importScripts("test/fixtures/bar.js", "test/fixtures/boo.js")\nfoo, bat')
-        .then((registration) => {
-          expect(sw.scope.bar).to.equal('bar');
-          expect(sw.scope.boo).to.equal('boo');
-        });
+      }
     });
   });
 
   describe('unregister()', () => {
-    it('should unregister a registered ServiceWorker context', () => {
-      return sw
-        .register('self.foo = "foo"\n')
-        .then((registration) => registration.unregister())
-        .then((success) => {
-          expect(success).to.equal(true);
-          expect(sw._sw).to.equal(null);
-        });
+    it('should unregister a registered ServiceWorker context', async () => {
+      const registration = await sw.register('sw-empty.js');
+      const success = await registration.unregister();
+      expect(success).to.equal(true);
+      expect(sw._sw).to.equal(undefined);
     });
   });
 
   describe('trigger()', () => {
-    it('should trigger an install event', () => {
-      return sw
-        .register('self.foo = "foo"\n')
-        .then((registration) => {
-          expect(sw._sw.state).to.equal('installing');
-          return sw.trigger('install');
-        })
-        .then(() => {
-          expect(sw._sw.state).to.equal('installed');
-          expect(sw.controller).to.equal(null);
-        });
+    it('should trigger an install event', async () => {
+      await sw.register('sw-empty.js');
+      expect(sw._sw.state).to.equal('installing');
+      await sw.trigger('install');
+      expect(sw._sw.state).to.equal('installed');
+      expect(sw.controller).to.equal(null);
     });
-    it('should trigger an activate event', () => {
-      return sw
-        .register('self.foo = "foo"\n')
-        .then((registration) => sw.trigger('install'))
-        .then(() => {
-          expect(sw._sw.state).to.equal('installed');
-          return sw.trigger('activate');
-        })
-        .then(() => {
-          expect(sw._sw.state).to.equal('activated');
-          expect(sw.controller).to.have.property('state', 'activated');
-        });
+    it('should trigger an activate event', async () => {
+      await sw.register('sw-empty.js');
+      await sw.trigger('install');
+      expect(sw._sw.state).to.equal('installed');
+      await sw.trigger('activate');
+      expect(sw._sw.state).to.equal('activated');
+      expect(sw.controller).to.have.property('state', 'activated');
     });
-    it('should throw when invalid state while triggering an event', () => {
-      return sw
-        .register('self.foo = "foo"\n')
-        .then((registration) => sw.trigger('fetch'))
-        .catch((err) => {
-          expect(err.message).to.equal('ServiceWorker not yet active');
-        });
+    it('should throw when invalid state while triggering an event', async () => {
+      await sw.register('sw-empty.js');
+      try {
+        await sw.trigger('fetch');
+      } catch (err) {
+        expect(err).to.to.have.property('message', 'ServiceWorker not yet active');
+      }
     });
-    it('should trigger a ServiceWorker event handler', () => {
+    it.only('should trigger a ServiceWorker event handler', () => {
       return sw
         .register('self.addEventListener("install", (evt) => self.foo = "foo");\n')
         .then((registration) => sw.trigger('install'))
@@ -173,7 +109,7 @@ describe('sw-test-env', () => {
     it('should trigger a ServiceWorker event handler with waitUntil()', () => {
       return sw
         .register(
-          'self.addEventListener("install", (evt) => evt.waitUntil(new Promise((resolve) => { self.foo = "foo"; resolve()})));\n'
+          'self.addEventListener("install", (evt) => evt.waitUntil(new Promise((resolve) => { self.foo = "foo"; resolve()})));\n',
         )
         .then((registration) => sw.trigger('install'))
         .then(() => {
@@ -235,24 +171,15 @@ describe('sw-test-env', () => {
       });
     });
     it('should install and cache assets', () => {
-      fake
-        .get('/index.js')
-        .reply(200)
-        .get('/index.css')
-        .reply(200);
+      fake.get('/index.js').reply(200).get('/index.css').reply(200);
       return sw
         .register('test/fixtures/sw-install.js')
         .then((registration) => sw.ready)
         .then((registration) => {
-          const urls = Array.from(sw.scope.caches._caches.get('v1')._items.keys()).map(
-            (req) => req.url
-          );
+          const urls = Array.from(sw.scope.caches._caches.get('v1')._items.keys()).map((req) => req.url);
 
           expect(sw._sw.state).to.equal('activated');
-          expect(urls).to.deep.equal([
-            'http://localhost:3333/index.js',
-            'http://localhost:3333/index.css'
-          ]);
+          expect(urls).to.deep.equal(['http://localhost:3333/index.js', 'http://localhost:3333/index.css']);
         });
     });
   });

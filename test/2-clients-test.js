@@ -1,8 +1,6 @@
-'use strict';
-
-const { expect } = require('chai');
-const Client = require('../src/Client');
-const Clients = require('../src/Clients');
+import Client from '../src/api/Client.js';
+import Clients from '../src/api/Clients.js';
+import { expect } from 'chai';
 
 describe('clients', () => {
   describe('Client', () => {
@@ -22,15 +20,16 @@ describe('clients', () => {
   });
 
   describe('Clients', () => {
-    let unit;
+    /** @type { Clients } */
+    let clients;
 
     beforeEach(() => {
-      unit = new Clients();
+      clients = new Clients();
     });
 
     describe('openWindow()', () => {
       it('should return a Promise that resolves to a Client object', () => {
-        const actual = unit.openWindow('whatever');
+        const actual = clients.openWindow('whatever');
 
         expect(actual).to.be.a('promise');
         return actual.then((client) => {
@@ -41,7 +40,7 @@ describe('clients', () => {
         it('should be created with url from openWindow argument', () => {
           const expected = 'https://whatever.com:8000/lol';
 
-          return unit.openWindow(expected).then((client) => {
+          return clients.openWindow(expected).then((client) => {
             expect(client.url).to.equal(expected);
           });
         });
@@ -50,15 +49,15 @@ describe('clients', () => {
 
     describe('get()', () => {
       it('should return a Promise resolving to the Client with the given id', () => {
-        return unit.openWindow('https://xfactor.com/').then((expected) => {
-          return unit.get(expected.id).then((actual) => {
+        return clients.openWindow('https://xfactor.com/').then((expected) => {
+          return clients.get(expected.id).then((actual) => {
             expect(actual).to.equal(expected);
           });
         });
       });
 
       it('should return a Promise resolving to undefined if a Client with the given id cant be found', () => {
-        return unit.get('lol').then((actual) => {
+        return clients.get('lol').then((actual) => {
           expect(actual).to.be.an('undefined');
         });
       });
@@ -66,7 +65,7 @@ describe('clients', () => {
 
     describe('claim()', () => {
       it('should return a Promise', () => {
-        const actual = unit.claim();
+        const actual = clients.claim();
 
         expect(actual).to.be.a('promise');
       });
@@ -74,13 +73,13 @@ describe('clients', () => {
 
     describe('matchAll()', () => {
       it('should return a Promise', () => {
-        const actual = unit.matchAll();
+        const actual = clients.matchAll();
 
         expect(actual).to.be.a('promise');
       });
       it('Promise should resolve to an array containing the clients controlled by the current service worker', () => {
-        return unit.openWindow('https://powerslave.com').then((expected) => {
-          return unit.matchAll().then((clients) => {
+        return clients.openWindow('https://powerslave.com').then((expected) => {
+          return clients.matchAll().then((clients) => {
             expect(clients).to.be.an('array');
             expect(clients).to.include(expected);
           });

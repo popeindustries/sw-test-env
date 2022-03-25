@@ -1,31 +1,32 @@
-'use strict';
-
-const nodeFetch = require('node-fetch');
-const urlUtil = require('url');
-
 const RE_ABSOLUTE = /^https?/;
 
 /**
  * Fetch function factory
- * @param {String} origin
- * @returns {Function}
+ * @param { string } origin
  */
-module.exports = function fetchFactory(origin = '') {
-  return function fetch(url, options) {
-    const isRequest = typeof url !== 'string';
-    const request = isRequest ? url : null;
+export default function fetchFactory(origin = '') {
+  /**
+   * @param { Request | string } url
+   * @param { import('node-fetch').RequestInit } options
+   */
+  return function (url, options) {
+    /** @type { Request | undefined } */
+    let request;
 
-    if (request) {
-      url = request.url;
+    if (typeof url !== 'string') {
+      request = url;
+      url = url.url;
     }
     if (!RE_ABSOLUTE.test(url)) {
-      url = urlUtil.resolve(origin, url);
+      url = new URL(url, origin).href;
     }
     if (request) {
-      const { body = {}, headers = {}, method = 'GET', redirect = 'follow' } = request;
+      const { body, headers = {}, method = 'GET', redirect = 'follow' } = request;
 
-      url = new nodeFetch.Request(url, { body, headers, method, redirect });
+      url = new Request(url, { body, headers, method, redirect });
     }
-    return nodeFetch(url, options);
+
+    // @ts-ignore
+    return fetch(url, options);
   };
-};
+}

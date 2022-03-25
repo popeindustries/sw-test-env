@@ -1,4 +1,4 @@
-'use strict';
+// @ts-nocheck
 
 self.addEventListener('install', (evt) => {
   evt.waitUntil(
@@ -7,7 +7,7 @@ self.addEventListener('install', (evt) => {
       .then((cache) => {
         return cache.addAll(['/index.js', '/index.css']);
       })
-      .then(() => self.skipWaiting())
+      .then(() => self.skipWaiting()),
   );
 });
 
