@@ -32,7 +32,6 @@ import FDBRequest from 'fake-indexeddb/build/FDBRequest.js';
 import FDBTransaction from 'fake-indexeddb/build/FDBTransaction.js';
 import FDBVersionChangeEvent from 'fake-indexeddb/build/FDBVersionChangeEvent.js';
 import FetchEvent from './api/events/FetchEvent.js';
-import fetchFactory from './fetchFactory.js';
 import FormData from 'form-data';
 import ServiceWorkerGlobalScope from './api/ServiceWorkerGlobalScope.js';
 import ServiceWorkerRegistration from './api/ServiceWorkerRegistration.js';
@@ -85,7 +84,7 @@ export default function createContext(globalScope, contextlocation, contextpath,
     clearImmediate,
     clearInterval,
     clearTimeout,
-    fetch: fetchFactory(origin),
+    fetch,
     indexedDB: fakeIndexedDB,
     location: contextlocation,
     origin,

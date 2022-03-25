@@ -12,7 +12,7 @@ describe('sw-test-env', () => {
     testServer.disableNetwork();
   });
   beforeEach(async () => {
-    fake = await testServer({ port: 3333 });
+    fake = await testServer({ autorespond: true, port: 3333 });
     sw = await connect('http://localhost:3333', 'test/fixtures');
   });
   afterEach(() => {
@@ -79,24 +79,17 @@ describe('sw-test-env', () => {
         expect(err).to.to.have.property('message', 'ServiceWorker not yet active');
       }
     });
-    it.only('should trigger a ServiceWorker event handler', () => {
-      return sw
-        .register('self.addEventListener("install", (evt) => self.foo = "foo");\n')
-        .then((registration) => sw.trigger('install'))
-        .then(() => {
-          expect(sw.scope.foo).to.equal('foo');
-        });
+    it('should trigger a ServiceWorker event handler', async () => {
+      await sw.register('sw-install.js');
+      await sw.trigger('install');
+      expect(sw.scope.installed).to.equal(true);
     });
-    it('should trigger a ServiceWorker fetch handler', () => {
-      fake.get('/index.js').reply(200);
-      return sw
-        .register('self.addEventListener("fetch", (evt) => evt.respondWith(fetch(evt.request)));\n')
-        .then((registration) => sw.trigger('install'))
-        .then((result) => sw.trigger('activate'))
-        .then((result) => sw.trigger('fetch', '/index.js'))
-        .then((response) => {
-          expect(response.status).to.equal(200);
-        });
+    it.only('should trigger a ServiceWorker fetch handler', async () => {
+      await sw.register('sw-fetch.js');
+      await sw.trigger('install');
+      await sw.trigger('activate');
+      const response = await sw.trigger('fetch', { request: '/index.js' });
+      expect(response.status).to.equal(200);
     });
     it('should trigger a ServiceWorker on* handler', () => {
       return sw

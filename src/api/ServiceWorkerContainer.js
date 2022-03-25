@@ -11,14 +11,14 @@ export default class ServiceWorkerContainer extends EventTarget {
    * @param { string } href
    * @param { string } webroot
    * @param { (container: ServiceWorkerContainer, scriptURL: string, options?: { scope: string }) => Promise<ServiceWorkerRegistration> } register
-   * @param { (container: ServiceWorkerContainer, eventType: string) => Promise<unknown> } trigger
+   * @param { (container: ServiceWorkerContainer, origin: string, eventType: string, ...args: Array<unknown>) => Promise<unknown> } trigger
    */
   constructor(href, webroot, register, trigger) {
     super();
     /** @type { ServiceWorker | null } */
     this.controller = null;
     this.register = register.bind(this, this);
-    this.trigger = trigger.bind(this, this);
+    this.trigger = trigger.bind(this, this, href);
     /** @type { ServiceWorkerGlobalScope & Record<string, unknown> } */
     this.scope;
     /** @type { ServiceWorkerRegistration } */

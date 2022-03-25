@@ -167,19 +167,18 @@ function clientPostMessage(container, message, transferList) {
  * @param { Array<unknown> } transferList
  * */
 function swPostMessage(container, message, transferList) {
-  trigger(container, 'message', message, transferList);
+  trigger(container, 'message', '', message, transferList);
 }
 
 /**
  * Trigger 'eventType' in current scope
  * @param { ServiceWorkerContainer } container
+ * @param { string } origin
  * @param { string } eventType
- * @param { unknown } [message]
- * @param { Array<unknown> } [transferList]
+ * @param { Array<unknown> } args
  * @returns { Promise<unknown> }
  */
-function trigger(container, eventType, message, transferList) {
-  // TODO: fully qualify 'fetch' event urls
+async function trigger(container, origin, eventType, ...args) {
   const context = getContextForContainer(container);
 
   if (!context) {
@@ -195,27 +194,27 @@ function trigger(container, eventType, message, transferList) {
     case 'activate':
       setState('activating', context, containers);
       break;
+    case 'fetch':
+      args.unshift(origin);
+      break;
     default:
     // No state mgmt necessary
   }
 
-  const done = () => {
-    switch (eventType) {
-      case 'install':
-        setState('installed', context, containers);
-        break;
-      case 'activate':
-        setState('activated', context, containers);
-        break;
-      default:
-      // No state mgmt necessary
-    }
-  };
+  const result = await handle(context.scope, eventType, ...args);
 
-  return handle(context.scope, eventType, message, transferList).then((result) => {
-    done();
-    return result;
-  });
+  switch (eventType) {
+    case 'install':
+      setState('installed', context, containers);
+      break;
+    case 'activate':
+      setState('activated', context, containers);
+      break;
+    default:
+    // No state mgmt necessary
+  }
+
+  return result;
 }
 
 /**

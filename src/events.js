@@ -4,15 +4,15 @@ import FetchEvent from './api/events/FetchEvent.js';
 /**
  * Create 'event' instance
  * @param { string } type
- * @param { Object } init
- * @returns { ExtendableEvent }
+ * @param { Array<unknown> } args
  */
-export function create(type, init) {
+export function create(type, ...args) {
   switch (type) {
     case 'fetch':
-      return new FetchEvent(type, /** @type { import('./api/events/FetchEvent').FetchEventInit } */ (init));
+      // @ts-ignore
+      return new FetchEvent(type, ...args);
     default:
-      return new ExtendableEvent(type, init);
+      return new ExtendableEvent(type);
   }
 }
 
@@ -40,26 +40,18 @@ export function handle(target, type, ...args) {
     return doHandle(listeners[0], type, args);
   }
 
-  return Promise.all(
-    listeners.map(
-      /**
-       * @param { (event: Event) => void } listener
-       * @returns { Promise<unknown> }
-       */
-      (listener) => doHandle(listener, type, args),
-    ),
-  );
+  return Promise.all(listeners.map((listener) => doHandle(listener, type, args)));
 }
 
 /**
  * Execute handle of 'listener'
  * @param { (event: Event) => void } listener
  * @param { string } type
- * @param { Object } init
+ * @param { Array<unknown> } args
  * @returns { Promise<unknown> }
  */
-function doHandle(listener, type, init) {
-  const event = create(type, init);
+function doHandle(listener, type, args) {
+  const event = create(type, ...args);
 
   listener(event);
   return event.promise || Promise.resolve();
