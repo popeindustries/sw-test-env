@@ -63,48 +63,45 @@ export async function destroy() {
 /**
  * Register ServiceWorker script at 'scriptURL'
  * @param { ServiceWorkerContainer } container
- * @param { string } scriptPath
+ * @param { string } scriptURL
  * @param { { scope?: string } } [options]
- * @returns { Promise<ServiceWorkerRegistration> }
+ * @returns { Promise<MockServiceWorkerRegistration> }
  */
-function register(container, scriptPath, { scope = DEFAULT_SCOPE } = {}) {
-  if (scriptPath.charAt(0) == '/') {
-    scriptPath = scriptPath.slice(1);
+async function register(container, scriptURL, { scope = DEFAULT_SCOPE } = {}) {
+  if (scriptURL.charAt(0) == '/') {
+    scriptURL = scriptURL.slice(1);
   }
   const origin = getOrigin(container._href);
-  const urlScope = new URL(scope, origin).href;
+  const scopeHref = new URL(scope, origin).href;
   const webroot = container._webroot;
-  let context = contexts.get(urlScope);
+  let context = contexts.get(scopeHref);
 
   if (!context) {
-    const contextPath = getResolvedPath(webroot, scriptPath);
-    const contextLocation = new URL(scriptPath, origin);
-    const registration = new ServiceWorkerRegistration(urlScope, unregister.bind(null, urlScope));
+    const contextPath = getResolvedPath(webroot, scriptURL);
+    const contextLocation = new URL(scriptURL, origin);
+    const registration = new ServiceWorkerRegistration(scopeHref, unregister.bind(null, scopeHref));
     const globalScope = new ServiceWorkerGlobalScope(registration, origin);
-    const sw = new ServiceWorker(scriptPath, swPostMessage.bind(null, container));
-    const resolvedScriptPath = isRelativePath(scriptPath) ? path.resolve(webroot, scriptPath) : scriptPath;
+    const sw = new ServiceWorker(scriptURL, swPostMessage.bind(null, container));
+    const scriptPath = isRelativePath(scriptURL) ? path.resolve(webroot, scriptURL) : scriptURL;
     try {
       const bundledSrc = esbuild.buildSync({
         bundle: true,
-        entryPoints: [resolvedScriptPath],
+        entryPoints: [scriptPath],
         format: 'cjs',
         target: 'node16',
         platform: 'node',
         write: false,
       });
-      // script = importScripts(script, container._webroot);
-      // contextLocation._webroot = container._webroot;
       const vmContext = createContext(globalScope, contextLocation, contextPath, origin);
       const sandbox = /** @type { ServiceWorkerGlobalScope & Record<string, unknown> } */ (vm.createContext(vmContext));
       vm.runInContext(bundledSrc.outputFiles[0].text, sandbox);
 
       context = {
-        // api: vmContext.module.exports,
         registration,
         scope: sandbox,
         sw,
       };
-      contexts.set(urlScope, context);
+      contexts.set(scopeHref, context);
     } catch (err) {
       throw /** @type { Error } */ (err).message.includes('importScripts')
         ? Error('"importScripts" not supported in esm ServiceWorker. Use esm "import" statement instead')
@@ -112,17 +109,17 @@ function register(container, scriptPath, { scope = DEFAULT_SCOPE } = {}) {
     }
   }
 
-  for (const container of getContainersForUrlScope(urlScope)) {
+  for (const container of getContainersForUrlScope(scopeHref)) {
     container._registration = context.registration;
     container._sw = context.sw;
-    // container.api = context.api;
     container.scope = context.scope;
 
+    // @ts-ignore
     // Create client for container
     container.scope.clients._connect(container._href, clientPostMessage.bind(null, container));
   }
 
-  return Promise.resolve(container._registration);
+  return container._registration;
 }
 
 /**

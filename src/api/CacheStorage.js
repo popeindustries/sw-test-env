@@ -1,5 +1,8 @@
 import Cache from './Cache.js';
 
+/**
+ * @implements MockCacheStorage
+ */
 export default class CacheStorage {
   /**
    * Constructor
@@ -8,33 +11,6 @@ export default class CacheStorage {
   constructor(origin) {
     this._caches = new Map();
     this._origin = origin;
-  }
-
-  /**
-   * Retrieve 'response' for matching 'request'
-   * @param { Request | string } request
-   * @param { import('./Cache').CacheQueryOptions & { cacheName?: string } } [options]
-   * @returns { Promise<Response | undefined> }
-   */
-  match(request, options = {}) {
-    if (options.cacheName) {
-      const cache = this._caches.get(options.cacheName);
-
-      if (!cache) {
-        return Promise.reject(Error(`cache with name '${options.cacheName}' not found`));
-      }
-      return cache.match(request, options);
-    }
-
-    for (const cache of this._caches.values()) {
-      const results = cache._match(request, options);
-
-      if (results.length) {
-        return Promise.resolve(results[0][1]);
-      }
-    }
-
-    return Promise.resolve(undefined);
   }
 
   /**
@@ -64,12 +40,30 @@ export default class CacheStorage {
   }
 
   /**
-   * Delete cache with 'cacheName'
-   * @param { string } cacheName
-   * @returns { Promise<boolean> }
+   * Retrieve 'response' for matching 'request'
+   * @param { Req | string } request
+   * @param { CacheQueryOptions & { cacheName?: string } } [options]
+   * @returns { Promise<Res | undefined> }
    */
-  delete(cacheName) {
-    return Promise.resolve(this._caches.delete(cacheName));
+  match(request, options = {}) {
+    if (options.cacheName) {
+      const cache = this._caches.get(options.cacheName);
+
+      if (!cache) {
+        return Promise.reject(Error(`cache with name '${options.cacheName}' not found`));
+      }
+      return cache.match(request, options);
+    }
+
+    for (const cache of this._caches.values()) {
+      const results = cache._match(request, options);
+
+      if (results.length) {
+        return Promise.resolve(results[0][1]);
+      }
+    }
+
+    return Promise.resolve(undefined);
   }
 
   /**
@@ -78,6 +72,15 @@ export default class CacheStorage {
    */
   keys() {
     return Promise.resolve(Array.from(this._caches.keys()));
+  }
+
+  /**
+   * Delete cache with 'cacheName'
+   * @param { string } cacheName
+   * @returns { Promise<boolean> }
+   */
+  delete(cacheName) {
+    return Promise.resolve(this._caches.delete(cacheName));
   }
 
   _destroy() {

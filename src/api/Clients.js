@@ -1,6 +1,9 @@
 import Client from './Client.js';
 import WindowClient from './WindowClient.js';
 
+/**
+ * @implements MockClients
+ */
 export default class Clients {
   constructor() {
     /** @type { Array<Client> } */

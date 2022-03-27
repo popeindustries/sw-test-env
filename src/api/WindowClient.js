@@ -1,5 +1,8 @@
 import Client from './Client.js';
 
+/**
+ * @implements MockWindowClient
+ */
 export default class WindowClient extends Client {
   /**
    * Constructor
@@ -10,6 +13,7 @@ export default class WindowClient extends Client {
     super(url, postMessage);
     this.type = 'window';
     this.focused = false;
+    /** @type { 'hidden' | 'visible' } */
     this.visibilityState = 'hidden';
   }
 

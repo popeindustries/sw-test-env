@@ -1,10 +1,10 @@
-/**
- * @typedef { import('./ServiceWorkerRegistration').default } ServiceWorkerRegistration
- */
 import CacheStorage from './CacheStorage.js';
 import Clients from './Clients.js';
 import EventTarget from './events/EventTarget.js';
 
+/**
+ * @implements MockServiceWorkerGlobalScope
+ */
 export default class ServiceWorkerGlobalScope extends EventTarget {
   /**
    * @param { ServiceWorkerGlobalScope } instance
@@ -15,14 +15,14 @@ export default class ServiceWorkerGlobalScope extends EventTarget {
 
   /**
    * Constructor
-   * @param { ServiceWorkerRegistration } registration
+   * @param { MockServiceWorkerRegistration } registration
    * @param { string } origin
    */
   constructor(registration, origin) {
     super();
-    this.registration = registration;
     this.caches = new CacheStorage(origin);
     this.clients = new Clients();
+    this.registration = registration;
   }
 
   /**

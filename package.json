@@ -24,6 +24,7 @@
     "node": ">=16"
   },
   "scripts": {
+    "build": "node ./scripts/build.js",
     "clean": "rm -f ./test/*.js && rm -rf docs",
     "format": "prettier --write './{src,test}/**/*'",
     "lint": "pnpm run lint:src && pnpm run lint:types",

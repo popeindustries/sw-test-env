@@ -1,5 +1,8 @@
 let uid = 0;
 
+/**
+ * @implements MockClient
+ */
 export default class Client {
   /**
    * Constructor

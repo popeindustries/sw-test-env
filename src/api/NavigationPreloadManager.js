@@ -1,10 +1,13 @@
+/**
+ * @implements MockNavigationPreloadManager
+ */
 export default class NavigationPreloadManager {
   async enable() {
-    return false;
+    return;
   }
 
   async disable() {
-    return true;
+    return;
   }
 
   async setHeaderValue() {
@@ -12,6 +15,6 @@ export default class NavigationPreloadManager {
   }
 
   async getState() {
-    return { enabled: false, headerValue: false };
+    return { enabled: false, headerValue: '' };
   }
 }

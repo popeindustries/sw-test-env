@@ -1,10 +1,6 @@
 /**
- * @typedef { Object } CacheQueryOptions
- * @property { boolean } [ignoreSearch]
- * @property { boolean } [ignoreMethod]
- * @property { boolean } [ignoreVary]
+ * @implements MockCache
  */
-
 export default class Cache {
   /**
    * Constructor
@@ -20,9 +16,9 @@ export default class Cache {
 
   /**
    * Retrieve 'response' for matching 'request'
-   * @param { Request | string } request
+   * @param { Req | string } request
    * @param { CacheQueryOptions } [options]
-   * @returns { Promise<Response | undefined> }
+   * @returns { Promise<Res | undefined> }
    */
   match(request, options = {}) {
     const results = this._match(request, options);
@@ -32,9 +28,9 @@ export default class Cache {
 
   /**
    * Retrieve one or more 'response's for matching 'request'
-   * @param { Request | string } request
+   * @param { Req | string } request
    * @param { CacheQueryOptions } [options]
-   * @returns { Promise<Array<Response>> } resolves with Array of Responses
+   * @returns { Promise<Array<Res>> } resolves with Array of Responses
    */
   matchAll(request, options = {}) {
     const results = this._match(request, options);
@@ -44,7 +40,7 @@ export default class Cache {
 
   /**
    * Fetch and store a 'request'
-   * @param { Request | string } request
+   * @param { Req | string } request
    * @returns { Promise<void> }
    */
   add(request) {
@@ -61,7 +57,7 @@ export default class Cache {
 
   /**
    * Fetch and store one or more 'request's
-   * @param { Array<Request | string> } requests
+   * @param { Array<Req | string> } requests
    * @returns { Promise<Array<void>> } resolves with Array of void
    */
   addAll(requests) {
@@ -70,8 +66,8 @@ export default class Cache {
 
   /**
    * Store 'response' keyed by 'request'
-   * @param { Request | string } request
-   * @param { Response } response
+   * @param { Req | string } request
+   * @param { Res } response
    * @returns { Promise<void> }
    */
   put(request, response) {
@@ -88,7 +84,7 @@ export default class Cache {
 
   /**
    * Remove 'response' matching 'request'
-   * @param { Request | string } request
+   * @param { Req | string } request
    * @param { CacheQueryOptions } [options]
    * @returns { Promise<Boolean> } resolves with 'true' if deleted
    */
@@ -109,9 +105,9 @@ export default class Cache {
 
   /**
    * Retrieve all keys
-   * @param { Request | string } [request] optionally filter based on Request
+   * @param { Req | string } [request] optionally filter based on Request
    * @param { CacheQueryOptions } [options]
-   * @returns {Promise<Array<Request>>} resolves with Array of Requests
+   * @returns { Promise<Array<Req>> } resolves with Array of Requests
    */
   keys(request, options = {}) {
     if (!request) {
@@ -124,15 +120,15 @@ export default class Cache {
   }
 
   /**
-   * @param { Request | string } request
+   * @param { Req | string } request
    * @param { CacheQueryOptions } options
-   * @returns { Array<[Request, Response]> }
+   * @returns { Array<[Req, Res]> }
    * @private
    */
   _match(request, { ignoreSearch = false, ignoreMethod = false }) {
     request = this._normalizeRequest(request);
 
-    /** @type { Array<[Request, Response]> } */
+    /** @type { Array<[Req, Res]> } */
     const results = [];
     const url = new URL(request.url);
     const pathname = this._normalizePathname(url.pathname);
@@ -165,8 +161,8 @@ export default class Cache {
   }
 
   /**
-   * @param { Request | string } request
-   * @returns { Request }
+   * @param { Req | string } request
+   * @returns { Req }
    * @private
    */
   _normalizeRequest(request) {

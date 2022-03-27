@@ -5,7 +5,7 @@
     "declaration": false,
     "esModuleInterop": true,
     "isolatedModules": true,
-    "lib": ["esnext", "dom"],
+    "lib": ["esnext"],
     "module": "esnext",
     "moduleResolution": "node",
     "noEmit": true,

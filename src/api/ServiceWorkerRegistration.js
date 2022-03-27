@@ -1,38 +1,35 @@
-/**
- * @typedef { import('./ContentIndex').default } ContentIndex
- * @typedef { import('./NavigationPreloadManager').default } NavigationPreloadManager
- * @typedef { import('./ServiceWorker').default } ServiceWorker
- */
 import EventTarget from './events/EventTarget.js';
 
+/**
+ * @implements MockServiceWorkerRegistration
+ */
 export default class ServiceWorkerRegistration extends EventTarget {
   /**
    * Constructor
    * @param { string } scope
-   * @param { () => void } unregister
+   * @param { () => Promise<boolean> } unregister
    */
   constructor(scope, unregister) {
     super();
     this.unregister = unregister;
     this.scope = scope;
-    /** @type { ContentIndex | undefined } */
+    /** @type { MockContentIndex | undefined } */
     this.index;
-    /** @type { NavigationPreloadManager | undefined } */
+    /** @type { MockNavigationPreloadManager | undefined } */
     this.navigationPreload;
 
-    /** @type { ServiceWorker | null } */
+    /** @type { MockServiceWorker | null } */
     this.installing = null;
-    /** @type { ServiceWorker | null } */
+    /** @type { MockServiceWorker | null } */
     this.waiting = null;
-    /** @type { ServiceWorker | null } */
+    /** @type { MockServiceWorker | null } */
     this.activating = null;
-    /** @type { ServiceWorker | null } */
+    /** @type { MockServiceWorker | null } */
     this.active = null;
   }
 
   /**
    * Update worker script
-   * @returns {void}
    */
   update() {
     // No-op
@@ -41,6 +38,7 @@ export default class ServiceWorkerRegistration extends EventTarget {
   _destroy() {
     this.index = undefined;
     this.navigationPreload = undefined;
+    this.installing = this.waiting = this.activating = this.active = null;
     this.removeAllEventListeners();
   }
 }

@@ -1,39 +1,38 @@
-/**
- * @typedef { import('./ServiceWorker').default } ServiceWorker
- * @typedef { import('./ServiceWorkerGlobalScope').default } ServiceWorkerGlobalScope
- * @typedef { import('./ServiceWorkerRegistration').default } ServiceWorkerRegistration
- */
 import EventTarget from './events/EventTarget.js';
 
+/**
+ * @implements MockServiceWorkerContainer
+ */
 export default class ServiceWorkerContainer extends EventTarget {
   /**
    * Constructor
    * @param { string } href
    * @param { string } webroot
-   * @param { (container: ServiceWorkerContainer, scriptURL: string, options?: { scope: string }) => Promise<ServiceWorkerRegistration> } register
-   * @param { (container: ServiceWorkerContainer, origin: string, eventType: string, ...args: Array<unknown>) => Promise<unknown> } trigger
+   * @param { (container: ServiceWorkerContainer, scriptURL: string, options?: { scope: string }) => Promise<MockServiceWorkerRegistration> } register
+   * @param { (container: ServiceWorkerContainer, origin: string, eventType: string, ...args: Array<unknown>) => Promise<any> } trigger
    */
   constructor(href, webroot, register, trigger) {
     super();
-    /** @type { ServiceWorker | null } */
+    /** @type { MockServiceWorker | null } */
     this.controller = null;
-    this.register = register.bind(this, this);
-    this.trigger = trigger.bind(this, this, href);
-    /** @type { ServiceWorkerGlobalScope & Record<string, unknown> } */
+    /** @type { MockServiceWorkerGlobalScope & Record<string, unknown> } */
     this.scope;
-    /** @type { ServiceWorkerRegistration } */
+
+    /** @type { MockServiceWorkerRegistration } */
     this._registration;
-    /** @type { ServiceWorker } */
+    /** @type { MockServiceWorker } */
     this._sw;
     this._href = href;
     this._webroot = webroot;
-    // this.api = undefined;
+
+    this.register = register.bind(this, this);
+    this.trigger = trigger.bind(this, this, href);
   }
 
   /**
    * Retrieve ServiceWorkerRegistration when active
    * Will trigger install/activate lifecycle
-   * @returns { Promise<ServiceWorkerRegistration> }
+   * @returns { Promise<MockServiceWorkerRegistration> }
    */
   get ready() {
     if (!this._registration) {
@@ -51,7 +50,7 @@ export default class ServiceWorkerContainer extends EventTarget {
   /**
    * Retrieve current ServiceWorker registration
    * @param { string } [scope]
-   * @returns { Promise<ServiceWorkerRegistration> }
+   * @returns { Promise<MockServiceWorkerRegistration> }
    */
   getRegistration(scope) {
     return Promise.resolve(this._registration);
@@ -59,11 +58,14 @@ export default class ServiceWorkerContainer extends EventTarget {
 
   /**
    * Retrieve all current ServiceWorker registrations
-   * @param { string } [scope]
-   * @returns { Promise<Array<ServiceWorkerRegistration>> }
+   * @returns { Promise<Array<MockServiceWorkerRegistration>> }
    */
-  getRegistrations(scope) {
+  getRegistrations() {
     return Promise.resolve([this._registration]);
+  }
+
+  startMessages() {
+    // TODO
   }
 
   _destroy() {

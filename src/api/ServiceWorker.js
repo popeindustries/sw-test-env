@@ -1,5 +1,8 @@
 import EventTarget from './events/EventTarget.js';
 
+/**
+ * @implements MockServiceWorker
+ */
 export default class ServiceWorker extends EventTarget {
   /**
    * Constructor

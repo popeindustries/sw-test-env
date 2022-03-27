@@ -1,13 +1,6 @@
 /**
- * @typedef { Object } ContentDescription
- * @property { string } id
- * @property { string } title
- * @property { string } description
- * @property { '' | 'homepage' | 'article' | 'video' | 'audio' } category
- * @property { Array<{ src: string; sizes: string; type: string }> } icons
- * @property { string } url
+ * @implements MockContentIndex
  */
-
 export default class ContentIndex {
   constructor() {
     /** @type { Map<string, ContentDescription> } */
