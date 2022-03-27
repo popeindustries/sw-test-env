@@ -1,10 +1,10 @@
-import { connect, destroy } from '../src/index.js';
+import { connect, destroy } from '../sw-test-env.js';
 import { expect } from 'chai';
 import { testServer } from 'dvlp/dvlp-test.js';
 
 /** @type { import('dvlp').TestServer } */
 let fake;
-/** @type { import('../src/api/ServiceWorkerContainer' ).default } */
+/** @type { MockServiceWorkerContainer } */
 let sw;
 
 describe('sw-test-env', () => {
@@ -12,11 +12,12 @@ describe('sw-test-env', () => {
     testServer.disableNetwork();
   });
   beforeEach(async () => {
-    fake = await testServer({ autorespond: true, port: 3333 });
+    fake = await testServer({ autorespond: true, latency: 0, port: 3333 });
     sw = await connect('http://localhost:3333', 'test/fixtures');
   });
-  afterEach(() => {
-    destroy();
+  afterEach(async () => {
+    await fake.destroy();
+    await destroy();
   });
   after(() => {
     testServer.enableNetwork();
@@ -51,24 +52,26 @@ describe('sw-test-env', () => {
       const registration = await sw.register('sw-empty.js');
       const success = await registration.unregister();
       expect(success).to.equal(true);
-      expect(sw._sw).to.equal(undefined);
+      expect(sw.controller).to.equal(undefined);
     });
   });
 
   describe('trigger()', () => {
     it('should trigger an install event', async () => {
       await sw.register('sw-empty.js');
+      // @ts-ignore
       expect(sw._sw.state).to.equal('installing');
       await sw.trigger('install');
+      // @ts-ignore
       expect(sw._sw.state).to.equal('installed');
       expect(sw.controller).to.equal(null);
     });
     it('should trigger an activate event', async () => {
       await sw.register('sw-empty.js');
       await sw.trigger('install');
+      // @ts-ignore
       expect(sw._sw.state).to.equal('installed');
       await sw.trigger('activate');
-      expect(sw._sw.state).to.equal('activated');
       expect(sw.controller).to.have.property('state', 'activated');
     });
     it('should throw when invalid state while triggering an event', async () => {
@@ -84,96 +87,76 @@ describe('sw-test-env', () => {
       await sw.trigger('install');
       expect(sw.scope.installed).to.equal(true);
     });
-    it.only('should trigger a ServiceWorker fetch handler', async () => {
+    it('should trigger a ServiceWorker fetch handler', async () => {
       await sw.register('sw-fetch.js');
       await sw.trigger('install');
       await sw.trigger('activate');
       const response = await sw.trigger('fetch', { request: '/index.js' });
       expect(response.status).to.equal(200);
     });
-    it('should trigger a ServiceWorker on* handler', () => {
-      return sw
-        .register('self.oninstall = (evt) => self.foo = "foo";\n')
-        .then((registration) => sw.trigger('install'))
-        .then(() => {
-          expect(sw.scope.foo).to.equal('foo');
-        });
+    it('should trigger a ServiceWorker on* handler', async () => {
+      await sw.register('sw-oninstall.js');
+      await sw.trigger('install');
+      expect(sw.scope.installed).to.equal(true);
     });
-    it('should trigger a ServiceWorker event handler with waitUntil()', () => {
-      return sw
-        .register(
-          'self.addEventListener("install", (evt) => evt.waitUntil(new Promise((resolve) => { self.foo = "foo"; resolve()})));\n',
-        )
-        .then((registration) => sw.trigger('install'))
-        .then(() => {
-          expect(sw.scope.foo).to.equal('foo');
-        });
+    it('should trigger a ServiceWorker event handler with waitUntil()', async () => {
+      await sw.register('sw-install-wait-until.js');
+      await sw.trigger('install');
+      expect(sw.scope.installed).to.equal(true);
     });
-    it('should trigger a handled error event', () => {
-      return sw
-        .register('self.onerror = (evt) => self.error = evt.message;\n')
-        .then((registration) => sw.trigger('error', Error('foo!')))
-        .catch((err) => {
-          expect(self.message).to.equal('foo!');
-        });
+    it('should trigger a handled error event', async () => {
+      await sw.register('sw-error.js');
+      const err = Error('ooops!');
+      const resolvedErr = await sw.trigger('error', err);
+      expect(sw.scope.message).to.equal('ooops!');
+      expect(err).to.equal(resolvedErr);
     });
-    it('should trigger an unhandled error event', () => {
-      return sw
-        .register('self.foo = "foo"\n')
-        .then((registration) => sw.trigger('error', Error('foo!')))
-        .catch((err) => {
-          expect(err.message).to.equal('foo!');
-        });
+    it('should trigger an unhandled error event', async () => {
+      await sw.register('sw-empty.js');
+      try {
+        await sw.trigger('error', Error('ooops!'));
+        expect(true).to.not.exist;
+      } catch (err) {
+        expect(err).to.have.property('message', 'ooops!');
+      }
     });
   });
 
   describe('ready', () => {
-    it('should execute install/activate lifecyle', () => {
-      return sw
-        .register('test/fixtures/sw.js')
-        .then((registration) => sw.ready)
-        .then((registration) => {
-          expect(sw._sw.state).to.equal('activated');
-          expect(sw.scope.foo).to.equal('foo');
-          expect(sw.scope.bar).to.equal('bar');
-        });
+    it('should execute install/activate lifecyle', async () => {
+      await sw.register('sw-install-activate.js');
+      await sw.ready;
+      expect(sw.controller?.state).to.equal('activated');
+      expect(sw.scope.installed).to.equal(true);
+      expect(sw.scope.activated).to.equal(true);
     });
-    it('should ignore existing install/activate lifecyle', () => {
-      return sw
-        .register('test/fixtures/sw.js')
-        .then((registration) => sw.trigger('install'))
-        .then((registration) => sw.ready)
-        .then((registration) => {
-          expect(sw._sw.state).to.equal('activated');
-          expect(sw.scope.foo).to.equal('foo');
-          expect(sw.scope.bar).to.equal('bar');
-        });
+    it('should ignore existing install/activate lifecyle', async () => {
+      await sw.register('sw-install-activate.js');
+      await sw.trigger('install');
+      await sw.ready;
+      expect(sw.controller?.state).to.equal('activated');
+      expect(sw.scope.installed).to.equal(true);
+      expect(sw.scope.activated).to.equal(true);
     });
-    it('should execute install/activate lifecyle for multiple connected pages', () => {
-      return connect().then((sw2) => {
-        return sw
-          .register('test/fixtures/sw.js')
-          .then((registration) => sw.ready)
-          .then((registration) => {
-            expect(sw._sw.state).to.equal('activated');
-            expect(sw2._sw.state).to.equal('activated');
-            expect(sw.scope.foo).to.equal('foo');
-            expect(sw2.scope.bar).to.equal('bar');
-            expect(sw.scope.clients._clients.length).to.equal(2);
-          });
-      });
+    it('should execute install/activate lifecyle for multiple connected pages', async () => {
+      const sw2 = await connect();
+      await sw.register('sw-install-activate.js');
+      await sw.ready;
+      expect(sw.controller?.state).to.equal('activated');
+      // @ts-ignore
+      expect(sw2._sw.state).to.equal('activated');
+      expect(sw.scope.installed).to.equal(true);
+      expect(sw2.scope.activated).to.equal(true);
+      expect(await sw.scope.clients.matchAll()).to.have.length(2);
     });
-    it('should install and cache assets', () => {
-      fake.get('/index.js').reply(200).get('/index.css').reply(200);
-      return sw
-        .register('test/fixtures/sw-install.js')
-        .then((registration) => sw.ready)
-        .then((registration) => {
-          const urls = Array.from(sw.scope.caches._caches.get('v1')._items.keys()).map((req) => req.url);
-
-          expect(sw._sw.state).to.equal('activated');
-          expect(urls).to.deep.equal(['http://localhost:3333/index.js', 'http://localhost:3333/index.css']);
-        });
+    it('should install and cache assets', async () => {
+      await sw.register('sw-install-precache-activate.js');
+      await sw.ready;
+      expect(sw.controller?.state).to.equal('activated');
+      const urls = (await (await sw.scope.caches.open('v1')).keys()).map((req) => req.url);
+      expect(urls).to.have.length(2);
+      expect(urls).to.include('http://localhost:3333/index.css');
+      expect(urls).to.include('http://localhost:3333/index.js');
     });
   });
 });

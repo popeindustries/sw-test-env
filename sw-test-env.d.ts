@@ -1,4 +1,4 @@
-export type Headers = import('node-fetch').Headers;
+export type Header = import('node-fetch').Header;
 export type Request = import('node-fetch').Request;
 export type Response = import('node-fetch').Response;
 
@@ -27,7 +27,7 @@ export interface MockServiceWorkerContainer {
    * @param scriptURL - the path to your service worker file (resolved based on optional `webroot` passed to `connect()`)
    * @param options - optional directory `scope` under which your service worker should be registered
    */
-  register(scriptURL: string, options: { scope: string }): Promise<MockServiceWorkerRegistration>;
+  register(scriptURL: string, options?: { scope: string }): Promise<MockServiceWorkerRegistration>;
   /**
    * Trigger event in active service worker context
    */
@@ -51,7 +51,7 @@ export interface MockServiceWorker {
   scriptURL: string;
   state: 'installing' | 'installed' | 'activating' | 'activated' | 'redundant';
 
-  postMessage(message: unknown, transferList: Array<unknown>): void;
+  postMessage(message: unknown, transferList?: Array<unknown>): void;
 }
 
 export interface MockServiceWorkerRegistration {
@@ -91,19 +91,19 @@ export interface MockNavigationPreloadManager {
 export interface MockCacheStorage {
   has(cacheName: string): Promise<boolean>;
   open(cacheName: string): Promise<MockCache>;
-  match(request: Request | string, options?: CacheQueryOptions & { cacheName?: string }): Promise<Response | undefined>;
+  match(request: Req | string, options?: CacheQueryOptions & { cacheName?: string }): Promise<Res | undefined>;
   keys(): Promise<Array<string>>;
   delete(cacheName: string): Promise<boolean>;
 }
 
 export interface MockCache {
-  match(request: Request | string, options?: CacheQueryOptions): Promise<Response | undefined>;
-  matchAll(request: Request | string, options?: CacheQueryOptions): Promise<Array<Response>>;
-  add(request: Request | string): Promise<void>;
-  addAll(requests: Array<Request | string>): Promise<Array<void>>;
-  put(request: Request | string, response: Response): Promise<void>;
-  keys(request: Request | string, options?: CacheQueryOptions): Promise<Array<Request>>;
-  delete(request: Request | string, options?: CacheQueryOptions): Promise<boolean>;
+  match(request: Req | string, options?: CacheQueryOptions): Promise<Res | undefined>;
+  matchAll(request: Req | string, options?: CacheQueryOptions): Promise<Array<Res>>;
+  add(request: Req | string): Promise<void>;
+  addAll(requests: Array<Req | string>): Promise<Array<void>>;
+  put(request: Req | string, response: Res): Promise<void>;
+  keys(request?: Req | string, options?: CacheQueryOptions): Promise<Array<Req>>;
+  delete(request: Req | string, options?: CacheQueryOptions): Promise<boolean>;
 }
 
 export interface MockClients {
@@ -118,7 +118,7 @@ export interface MockClient {
   type: string;
   url: string;
 
-  postMessage(message: unknown, transferList: Array<unknown>): void;
+  postMessage(message: unknown, transferList?: Array<unknown>): void;
 }
 
 export interface MockWindowClient extends MockClient {
@@ -127,6 +127,17 @@ export interface MockWindowClient extends MockClient {
 
   focus(): Promise<MockWindowClient>;
   navigate(url: string): Promise<MockWindowClient>;
+}
+
+export class MessageChannel {
+  port1: MessagePort;
+  port2: MessagePort;
+}
+
+export class MessagePort extends EventTarget {
+  postMessage(messsage: unknown, transferList?: Array<unknown>);
+  start(): void;
+  close(): void;
 }
 
 type CacheQueryOptions = {
@@ -156,7 +167,11 @@ type FetchEventInit = {
 interface TriggerEvents {
   install: void;
   activate: void;
-  fetch: Response;
+  fetch: Res;
   error: void;
   unhandledrejection: void;
 }
+
+type Req = import('node-fetch').Request;
+
+type Res = import('node-fetch').Response;

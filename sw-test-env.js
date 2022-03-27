@@ -187,7 +187,7 @@ var Clients = class {
   async get(id) {
     return this._clients.find((client) => client.id === id);
   }
-  async matchAll({ type = 'window' } = {}) {
+  async matchAll({ type = 'any' } = {}) {
     return this._clients.filter((client) => type === 'any' || client.type === type);
   }
   async openWindow(url) {
@@ -295,6 +295,83 @@ var EventTarget = class {
   }
 };
 
+// src/api/events/ErrorEvent.js
+var ErrorEvent = class extends ExtendableEvent {
+  constructor(type, error) {
+    super(type);
+    this.message = error == null ? void 0 : error.message;
+    this.promise = Promise.resolve(error);
+  }
+};
+
+// src/api/events/MessageEvent.js
+var MessageEvent = class extends ExtendableEvent {
+  constructor(type, init = {}) {
+    super(type);
+    this.data = init.data ?? null;
+    this.origin = init.origin ?? '';
+    this.source = init.source ?? null;
+    this.ports = init.ports ?? [];
+  }
+};
+
+// src/events.js
+function create(type, ...args) {
+  switch (type) {
+    case 'error':
+      return new ErrorEvent('error', args[0]);
+    case 'fetch':
+      return new FetchEvent(type, ...args);
+    case 'message':
+      return new MessageEvent(type, args[0]);
+    default:
+      return new ExtendableEvent(type);
+  }
+}
+function handle(target, type, ...args) {
+  var _a;
+  const listeners = ((_a = target._listeners[type]) == null ? void 0 : _a.slice()) || [];
+  const onevent = target[`on${type}`];
+  if (onevent) {
+    listeners.push(onevent);
+  }
+  if ((type === 'error' || type === 'unhandledrejection') && !listeners.length) {
+    throw args[0] || Error(`unhandled error of type ${type}`);
+  }
+  if (listeners.length === 1) {
+    return doHandle(listeners[0], type, args);
+  }
+  return Promise.all(listeners.map((listener) => doHandle(listener, type, args)));
+}
+function doHandle(listener, type, args) {
+  const event = create(type, ...args);
+  listener(event);
+  return event.promise ?? Promise.resolve();
+}
+
+// src/api/MessagePort.js
+var MessagePort = class extends EventTarget {
+  constructor(otherPort) {
+    super();
+    this._otherPort = otherPort;
+  }
+  postMessage(message, transferList) {
+    if (this._otherPort) {
+      handle(this._otherPort, 'message', message, transferList);
+    }
+  }
+  start() {}
+  close() {}
+};
+
+// src/api/MessageChannel.js
+var MessageChannel = class {
+  constructor() {
+    this.port1 = new MessagePort();
+    this.port2 = new MessagePort(this.port1);
+  }
+};
+
 // src/api/ServiceWorkerGlobalScope.js
 var ServiceWorkerGlobalScope = class extends EventTarget {
   static [Symbol.hasInstance](instance) {
@@ -392,38 +469,6 @@ function createContext(globalScope, contextlocation, contextpath, origin) {
 
 // src/index.js
 import esbuild from 'esbuild';
-
-// src/events.js
-function create(type, ...args) {
-  switch (type) {
-    case 'fetch':
-      return new FetchEvent(type, ...args);
-    default:
-      return new ExtendableEvent(type);
-  }
-}
-function handle(target, type, ...args) {
-  var _a;
-  const listeners = ((_a = target._listeners[type]) == null ? void 0 : _a.slice()) || [];
-  const onevent = target[`on${type}`];
-  if (onevent) {
-    listeners.push(onevent);
-  }
-  if ((type === 'error' || type === 'unhandledrejection') && !listeners.length) {
-    throw args[0] || Error(`unhandled error of type ${type}`);
-  }
-  if (listeners.length === 1) {
-    return doHandle(listeners[0], type, args);
-  }
-  return Promise.all(listeners.map((listener) => doHandle(listener, type, args)));
-}
-function doHandle(listener, type, args) {
-  const event = create(type, ...args);
-  listener(event);
-  return event.promise || Promise.resolve();
-}
-
-// src/index.js
 import path2 from 'path';
 
 // src/api/ServiceWorker.js
@@ -516,7 +561,7 @@ async function register(container, scriptURL, { scope = DEFAULT_SCOPE } = {}) {
     const contextLocation = new URL(scriptURL, origin);
     const registration = new ServiceWorkerRegistration(scopeHref, unregister.bind(null, scopeHref));
     const globalScope = new ServiceWorkerGlobalScope(registration, origin);
-    const sw = new ServiceWorker(scriptURL, swPostMessage.bind(null, container));
+    const sw = new ServiceWorker(scriptURL, swPostMessage.bind(null, container, origin));
     const scriptPath = isRelativePath(scriptURL) ? path2.resolve(webroot, scriptURL) : scriptURL;
     try {
       const bundledSrc = esbuild.buildSync({
@@ -565,10 +610,10 @@ function unregister(contextKey) {
   return Promise.resolve(true);
 }
 function clientPostMessage(container, message, transferList) {
-  handle(container, 'message', message, transferList, container.controller);
+  handle(container, 'message', { data: message, source: container.controller });
 }
-function swPostMessage(container, message, transferList) {
-  trigger(container, 'message', '', message, transferList);
+function swPostMessage(container, origin, message, transferList) {
+  trigger(container, origin, 'message', { data: message, origin });
 }
 async function trigger(container, origin, eventType, ...args) {
   const context = getContextForContainer(container);
@@ -674,4 +719,4 @@ function getResolvedPath(contextPath, p) {
 function isRelativePath(p) {
   return !path2.isAbsolute(p);
 }
-export { Headers3 as Headers, Request3 as Request, Response3 as Response, connect, destroy };
+export { Headers3 as Headers, MessageChannel, Request3 as Request, Response3 as Response, connect, destroy };

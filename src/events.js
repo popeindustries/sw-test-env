@@ -1,5 +1,7 @@
+import ErrorEvent from './api/events/ErrorEvent.js';
 import ExtendableEvent from './api/events/ExtendableEvent.js';
 import FetchEvent from './api/events/FetchEvent.js';
+import MessageEvent from './api/events/MessageEvent.js';
 
 /**
  * Create 'event' instance
@@ -8,9 +10,15 @@ import FetchEvent from './api/events/FetchEvent.js';
  */
 export function create(type, ...args) {
   switch (type) {
+    case 'error':
+      // @ts-ignore
+      return new ErrorEvent('error', args[0]);
     case 'fetch':
       // @ts-ignore
       return new FetchEvent(type, ...args);
+    case 'message':
+      // @ts-ignore
+      return new MessageEvent(type, args[0]);
     default:
       return new ExtendableEvent(type);
   }
@@ -54,5 +62,5 @@ function doHandle(listener, type, args) {
   const event = create(type, ...args);
 
   listener(event);
-  return event.promise || Promise.resolve();
+  return event.promise ?? Promise.resolve();
 }

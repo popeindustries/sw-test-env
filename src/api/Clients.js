@@ -24,7 +24,7 @@ export default class Clients {
    * @param { { includeUncontrolled?: boolean, type?: string }} [options]
    * @returns { Promise<Array<Client>> }
    */
-  async matchAll({ type = 'window' } = {}) {
+  async matchAll({ type = 'any' } = {}) {
     // TODO: handle `includeUncontrolled`
     return this._clients.filter((client) => type === 'any' || client.type === type);
   }

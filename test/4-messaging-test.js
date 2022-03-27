@@ -1,42 +1,34 @@
-'use strict';
+import { connect, destroy, MessageChannel } from '../sw-test-env.js';
+import { expect } from 'chai';
 
-const { expect } = require('chai');
-const { connect, destroy, MessageChannel } = require('../src/index');
-
+/** @type { MockServiceWorkerContainer } */
 let sw;
 
 describe('messaging', () => {
-  beforeEach((done) => {
-    connect().then((serviceWorker) => {
-      sw = serviceWorker;
-      done();
-    });
+  beforeEach(async () => {
+    sw = await connect('http://localhost:3333', 'test/fixtures');
   });
   afterEach(() => {
     destroy();
   });
 
   describe('unicast', () => {
-    it('should send client message to ServiceWorker', () => {
-      return sw
-        .register('self.addEventListener("message", (evt) => self.message = evt.data)\n')
-        .then((registration) => sw.ready)
-        .then((registration) => {
-          sw.controller.postMessage({ foo: 'foo' });
-          expect(sw.scope.message).to.deep.equal({ foo: 'foo' });
-        });
+    it('should send client message to ServiceWorker', async () => {
+      await sw.register('sw-client-message.js');
+      await sw.ready;
+      sw.controller?.postMessage({ foo: 'foo' });
+      expect(sw.scope.message).to.deep.equal({ foo: 'foo' });
     });
-    it('should send ServiceWorker reply to client', (done) => {
-      sw.register('self.addEventListener("message", (evt) => evt.ports[0].postMessage({ foo: "bar" }))\n')
-        .then((registration) => sw.ready)
-        .then((registration) => {
+    it.only('should send ServiceWorker reply to client', (done) => {
+      sw.register('sw-message.js')
+        .then(() => sw.ready)
+        .then(() => {
           const mc = new MessageChannel();
-
           mc.port1.addEventListener('message', (evt) => {
-            expect(evt.data).to.deep.equal({ foo: 'bar' });
+            expect(/** @type { MessageEvent } */ (evt).data).to.deep.equal({ foo: 'foo' });
             done();
           });
-          sw.controller.postMessage({ foo: 'foo' }, [mc.port2]);
+          sw.controller?.postMessage({ foo: 'foo' }, [mc.port2]);
         });
     });
     it('should send ServiceWorker reply to client with onmessage', (done) => {

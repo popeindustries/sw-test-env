@@ -1,3 +1,7 @@
+declare type Header = import('node-fetch').Header;
+declare type Request = import('node-fetch').Request;
+declare type Response = import('node-fetch').Response;
+
 /**
  * Create/retrieve `ServiceWorkerContainer` instance for `origin`.
  * @param origin - the origin under which to host the service worker (default is `http://localhost:3333`)
@@ -47,7 +51,7 @@ declare interface MockServiceWorker {
   scriptURL: string;
   state: 'installing' | 'installed' | 'activating' | 'activated' | 'redundant';
 
-  postMessage(message: unknown, transferList: Array<unknown>): void;
+  postMessage(message: unknown, transferList?: Array<unknown>): void;
 }
 
 declare interface MockServiceWorkerRegistration {
@@ -98,7 +102,7 @@ declare interface MockCache {
   add(request: Req | string): Promise<void>;
   addAll(requests: Array<Req | string>): Promise<Array<void>>;
   put(request: Req | string, response: Res): Promise<void>;
-  keys(request: Req | string, options?: CacheQueryOptions): Promise<Array<Req>>;
+  keys(request?: Req | string, options?: CacheQueryOptions): Promise<Array<Req>>;
   delete(request: Req | string, options?: CacheQueryOptions): Promise<boolean>;
 }
 
@@ -114,7 +118,7 @@ declare interface MockClient {
   type: string;
   url: string;
 
-  postMessage(message: unknown, transferList: Array<unknown>): void;
+  postMessage(message: unknown, transferList?: Array<unknown>): void;
 }
 
 declare interface MockWindowClient extends MockClient {
@@ -123,6 +127,17 @@ declare interface MockWindowClient extends MockClient {
 
   focus(): Promise<MockWindowClient>;
   navigate(url: string): Promise<MockWindowClient>;
+}
+
+declare class MessageChannel {
+  port1: MessagePort;
+  port2: MessagePort;
+}
+
+declare class MessagePort extends EventTarget {
+  postMessage(messsage: unknown, transferList?: Array<unknown>);
+  start(): void;
+  close(): void;
 }
 
 type CacheQueryOptions = {

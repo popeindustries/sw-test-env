@@ -24,6 +24,7 @@ const containers = new Set();
 const contexts = new Map();
 
 export { Headers, Request, Response } from 'node-fetch';
+export { default as MessageChannel } from './api/MessageChannel.js';
 
 /**
  * Create/retrieve ServiceWorkerContainer instance for `origin`
@@ -81,7 +82,7 @@ async function register(container, scriptURL, { scope = DEFAULT_SCOPE } = {}) {
     const contextLocation = new URL(scriptURL, origin);
     const registration = new ServiceWorkerRegistration(scopeHref, unregister.bind(null, scopeHref));
     const globalScope = new ServiceWorkerGlobalScope(registration, origin);
-    const sw = new ServiceWorker(scriptURL, swPostMessage.bind(null, container));
+    const sw = new ServiceWorker(scriptURL, swPostMessage.bind(null, container, origin));
     const scriptPath = isRelativePath(scriptURL) ? path.resolve(webroot, scriptURL) : scriptURL;
     try {
       const bundledSrc = esbuild.buildSync({
@@ -151,20 +152,21 @@ function unregister(contextKey) {
  * Send 'message' to client listeners
  * @param { ServiceWorkerContainer } container
  * @param { unknown } message
- * @param { Array<unknown> } transferList
+ * @param { Array<unknown> } [transferList]
  */
 function clientPostMessage(container, message, transferList) {
-  handle(container, 'message', message, transferList, container.controller);
+  handle(container, 'message', { data: message, source: container.controller });
 }
 
 /**
  * Send 'message' to active ServiceWorker
  * @param { ServiceWorkerContainer } container
+ * @param { string } origin
  * @param { unknown } message
- * @param { Array<unknown> } transferList
+ * @param { Array<unknown> } [transferList]
  * */
-function swPostMessage(container, message, transferList) {
-  trigger(container, 'message', '', message, transferList);
+function swPostMessage(container, origin, message, transferList) {
+  trigger(container, origin, 'message', { data: message, origin });
 }
 
 /**

@@ -33,6 +33,9 @@ import FDBTransaction from 'fake-indexeddb/build/FDBTransaction.js';
 import FDBVersionChangeEvent from 'fake-indexeddb/build/FDBVersionChangeEvent.js';
 import FetchEvent from './api/events/FetchEvent.js';
 import FormData from 'form-data';
+import MessageChannel from './api/MessageChannel.js';
+import MessageEvent from './api/events/MessageEvent.js';
+import MessagePort from './api/MessagePort.js';
 import ServiceWorkerGlobalScope from './api/ServiceWorkerGlobalScope.js';
 import ServiceWorkerRegistration from './api/ServiceWorkerRegistration.js';
 
