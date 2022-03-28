@@ -28,7 +28,7 @@ export default class ServiceWorkerContainer extends EventTarget {
     this.register = register.bind(this, this);
     this.trigger = trigger.bind(this, this, href);
 
-    /** @type { (this: MockServiceWorkerContainer, evt: MessageEvent) => void } */
+    /** @type { ((this: MockServiceWorkerContainer, evt: MockMessageEvent) => void) | undefined } */
     this.onmessage;
   }
 

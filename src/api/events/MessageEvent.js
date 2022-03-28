@@ -1,10 +1,13 @@
 import ExtendableEvent from './ExtendableEvent.js';
 
+/**
+ * @implements MockMessageEvent
+ */
 export default class MessageEvent extends ExtendableEvent {
   /**
    * Constructor
    * @param { string } type
-   * @param { { data?: unknown, origin?: string, lastEventId?: string, source?: MessageEventSource, ports?: Array<MessagePort> } } [init]
+   * @param { { data?: unknown, origin?: string, lastEventId?: string, source?: MessageEventSource, ports?: Array<MockMessagePort> } } [init]
    */
   constructor(type, init = {}) {
     super(type);

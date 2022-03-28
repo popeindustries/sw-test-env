@@ -23,6 +23,17 @@ export default class ServiceWorkerGlobalScope extends EventTarget {
     this.caches = new CacheStorage(origin);
     this.clients = new Clients();
     this.registration = registration;
+
+    /** @type { (this: MockServiceWorkerGlobalScope, evt: MockExtendableEvent) => void } */
+    this.oninstall;
+    /** @type { (this: MockServiceWorkerGlobalScope, evt: MockExtendableEvent) => void } */
+    this.onactivate;
+    /** @type { (this: MockServiceWorkerGlobalScope, evt: MockFetchEvent) => void } */
+    this.onfetch;
+    /** @type { (this: MockServiceWorkerGlobalScope, evt: MockMessageEvent) => void } */
+    this.onmessage;
+    /** @type { (this: MockServiceWorkerGlobalScope, evt: MockErrorEvent) => void } */
+    this.onerror;
   }
 
   /**

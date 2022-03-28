@@ -1,3 +1,4 @@
+import { Request, Response } from 'node-fetch';
 import Cache from '../src/api/Cache.js';
 import CacheStorage from '../src/api/CacheStorage.js';
 import { expect } from 'chai';

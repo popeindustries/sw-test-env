@@ -53,7 +53,7 @@ export default class Clients {
   /**
    * Create new client on connect
    * @param { string } url
-   * @param { (message: unknown, transferList: Array<unknown>) => void } postMessage
+   * @param { PostMessage } postMessage
    */
   _connect(url, postMessage) {
     this._clients.push(new Client(url, postMessage));

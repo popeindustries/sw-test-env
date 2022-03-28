@@ -7,7 +7,7 @@ export default class WindowClient extends Client {
   /**
    * Constructor
    * @param { string } url
-   * @param { (message: unknown, transferList: Array<unknown>) => void } [postMessage]
+   * @param { PostMessage } [postMessage]
    */
   constructor(url, postMessage) {
     super(url, postMessage);

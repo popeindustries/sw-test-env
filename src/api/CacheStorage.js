@@ -41,9 +41,9 @@ export default class CacheStorage {
 
   /**
    * Retrieve 'response' for matching 'request'
-   * @param { Req | string } request
+   * @param { import('node-fetch').Request | string } request
    * @param { CacheQueryOptions & { cacheName?: string } } [options]
-   * @returns { Promise<Res | undefined> }
+   * @returns { Promise<import('node-fetch').Response | undefined> }
    */
   match(request, options = {}) {
     if (options.cacheName) {

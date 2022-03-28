@@ -1,7 +1,7 @@
 /**
  * @typedef { Object } FetchEventInit
- * @property { Request } request
- * @property { Promise<Response> } [preloadResponse]
+ * @property { import('node-fetch').Request } request
+ * @property { Promise<import('node-fetch').Response> } [preloadResponse]
  * @property { string } [clientId]
  * @property { string } [resultingClientId]
  * @property { string } [replacesClientId]
@@ -10,7 +10,11 @@
 import { contentType } from 'mime-types';
 import ExtendableEvent from './ExtendableEvent.js';
 import path from 'path';
+import { Request } from 'node-fetch';
 
+/**
+ * @implements MockFetchEvent
+ */
 export default class FetchEvent extends ExtendableEvent {
   /**
    * Constructor
@@ -29,7 +33,7 @@ export default class FetchEvent extends ExtendableEvent {
 
     /** @type { URL } */
     let url;
-    /** @type { RequestInit } */
+    /** @type { import('node-fetch').RequestInit } */
     let requestInit;
 
     if (typeof request === 'string') {

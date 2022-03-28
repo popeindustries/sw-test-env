@@ -5,34 +5,47 @@ import MessageEvent from './api/events/MessageEvent.js';
 
 /**
  * Create 'event' instance
+ * @param { EventTarget } target
  * @param { string } type
  * @param { Array<unknown> } args
  */
-export function create(type, ...args) {
+export function create(target, type, ...args) {
+  let event;
+
   switch (type) {
     case 'error':
       // @ts-ignore
-      return new ErrorEvent('error', args[0]);
+      event = new ErrorEvent('error', args[0]);
+      break;
     case 'fetch':
       // @ts-ignore
-      return new FetchEvent(type, ...args);
+      event = new FetchEvent(type, ...args);
+      break;
     case 'message':
       // @ts-ignore
-      return new MessageEvent(type, args[0]);
+      event = new MessageEvent(type, args[0]);
+      break;
     default:
-      return new ExtendableEvent(type);
+      event = new ExtendableEvent(type);
   }
+
+  Object.defineProperty(event, 'target', {
+    value: target,
+    writable: false,
+  });
+
+  return event;
 }
 
 /**
  * Handle event 'type' from 'target'
- * @param { { _listeners: Record<string, Array<(event: Event) => void >> } } target
+ * @param { MockEventTarget } target
  * @param { string } type
  * @param { Array<unknown> } args
  * @returns { Promise<unknown> }
  */
 export function handle(target, type, ...args) {
-  const listeners = target._listeners[type]?.slice() || [];
+  const listeners = target.listeners[type]?.slice() || [];
   // @ts-ignore
   const onevent = target[`on${type}`];
 
@@ -45,21 +58,22 @@ export function handle(target, type, ...args) {
   }
 
   if (listeners.length === 1) {
-    return doHandle(listeners[0], type, args);
+    return doHandle(target, listeners[0], type, args);
   }
 
-  return Promise.all(listeners.map((listener) => doHandle(listener, type, args)));
+  return Promise.all(listeners.map((listener) => doHandle(target, listener, type, args)));
 }
 
 /**
  * Execute handle of 'listener'
+ * @param { EventTarget } target
  * @param { (event: Event) => void } listener
  * @param { string } type
  * @param { Array<unknown> } args
  * @returns { Promise<unknown> }
  */
-function doHandle(listener, type, args) {
-  const event = create(type, ...args);
+function doHandle(target, listener, type, args) {
+  const event = create(target, type, ...args);
 
   listener(event);
   return event.promise ?? Promise.resolve();

@@ -16,9 +16,9 @@ export default class Cache {
 
   /**
    * Retrieve 'response' for matching 'request'
-   * @param { Req | string } request
+   * @param { import('node-fetch').Request | string } request
    * @param { CacheQueryOptions } [options]
-   * @returns { Promise<Res | undefined> }
+   * @returns { Promise<import('node-fetch').Response | undefined> }
    */
   match(request, options = {}) {
     const results = this._match(request, options);
@@ -28,9 +28,9 @@ export default class Cache {
 
   /**
    * Retrieve one or more 'response's for matching 'request'
-   * @param { Req | string } request
+   * @param { import('node-fetch').Request | string } request
    * @param { CacheQueryOptions } [options]
-   * @returns { Promise<Array<Res>> } resolves with Array of Responses
+   * @returns { Promise<Array<import('node-fetch').Response>> } resolves with Array of Responses
    */
   matchAll(request, options = {}) {
     const results = this._match(request, options);
@@ -40,7 +40,7 @@ export default class Cache {
 
   /**
    * Fetch and store a 'request'
-   * @param { Req | string } request
+   * @param { import('node-fetch').Request | string } request
    * @returns { Promise<void> }
    */
   add(request) {
@@ -57,7 +57,7 @@ export default class Cache {
 
   /**
    * Fetch and store one or more 'request's
-   * @param { Array<Req | string> } requests
+   * @param { Array<import('node-fetch').Request | string> } requests
    * @returns { Promise<Array<void>> } resolves with Array of void
    */
   addAll(requests) {
@@ -66,8 +66,8 @@ export default class Cache {
 
   /**
    * Store 'response' keyed by 'request'
-   * @param { Req | string } request
-   * @param { Res } response
+   * @param { import('node-fetch').Request | string } request
+   * @param { import('node-fetch').Response } response
    * @returns { Promise<void> }
    */
   put(request, response) {
@@ -84,7 +84,7 @@ export default class Cache {
 
   /**
    * Remove 'response' matching 'request'
-   * @param { Req | string } request
+   * @param { import('node-fetch').Request | string } request
    * @param { CacheQueryOptions } [options]
    * @returns { Promise<Boolean> } resolves with 'true' if deleted
    */
@@ -105,9 +105,9 @@ export default class Cache {
 
   /**
    * Retrieve all keys
-   * @param { Req | string } [request] optionally filter based on Request
+   * @param { import('node-fetch').Request | string } [request] optionally filter based on Request
    * @param { CacheQueryOptions } [options]
-   * @returns { Promise<Array<Req>> } resolves with Array of Requests
+   * @returns { Promise<Array<import('node-fetch').Request>> } resolves with Array of Requests
    */
   keys(request, options = {}) {
     if (!request) {
@@ -120,15 +120,15 @@ export default class Cache {
   }
 
   /**
-   * @param { Req | string } request
+   * @param { import('node-fetch').Request | string } request
    * @param { CacheQueryOptions } options
-   * @returns { Array<[Req, Res]> }
+   * @returns { Array<[import('node-fetch').Request, import('node-fetch').Response]> }
    * @private
    */
   _match(request, { ignoreSearch = false, ignoreMethod = false }) {
     request = this._normalizeRequest(request);
 
-    /** @type { Array<[Req, Res]> } */
+    /** @type { Array<[import('node-fetch').Request, import('node-fetch').Response]> } */
     const results = [];
     const url = new URL(request.url);
     const pathname = this._normalizePathname(url.pathname);
@@ -161,8 +161,8 @@ export default class Cache {
   }
 
   /**
-   * @param { Req | string } request
-   * @returns { Req }
+   * @param { import('node-fetch').Request | string } request
+   * @returns { import('node-fetch').Request }
    * @private
    */
   _normalizeRequest(request) {

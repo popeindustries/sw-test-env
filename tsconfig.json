@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
+    "allowJs": true,
     "allowSyntheticDefaultImports": true,
     "checkJs": true,
     "declaration": false,
-    "esModuleInterop": true,
     "isolatedModules": true,
     "lib": ["esnext"],
     "module": "esnext",

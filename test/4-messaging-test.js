@@ -60,14 +60,14 @@ describe('messaging', () => {
         .then(() => sw.ready)
         .then(() => {
           sw.addEventListener('message', (evt) => {
-            const { data, source } = /** @type { MessageEvent } */ (evt);
+            const { data, source } = /** @type { MockMessageEvent } */ (evt);
             count++;
             expect(data).to.equal(data);
             expect(source).to.equal(sw.controller);
             expect(count).to.equal(1);
           });
           sw2.onmessage = (evt) => {
-            const { data, source } = /** @type { MessageEvent } */ (evt);
+            const { data, source } = /** @type { MockMessageEvent } */ (evt);
             count++;
             expect(data).to.equal(data);
             expect(source).to.equal(sw2.controller);

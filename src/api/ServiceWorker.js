@@ -7,7 +7,7 @@ export default class ServiceWorker extends EventTarget {
   /**
    * Constructor
    * @param { string } scriptURL
-   * @param { (message: unknown, transferList: Array<unknown>) => void } postMessage
+   * @param { PostMessage } postMessage
    */
   constructor(scriptURL, postMessage) {
     super();

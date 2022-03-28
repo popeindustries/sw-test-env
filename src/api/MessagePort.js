@@ -1,6 +1,9 @@
 import EventTarget from './events/EventTarget.js';
 import { handle } from '../events.js';
 
+/**
+ * @implements MockMessagePort
+ */
 export default class MessagePort extends EventTarget {
   /**
    * Constructor
@@ -9,6 +12,9 @@ export default class MessagePort extends EventTarget {
   constructor(otherPort) {
     super();
     this._otherPort = otherPort;
+
+    /** @type { ((this: MockMessagePort, evt: MockMessageEvent) => void) | undefined } */
+    this.onmessage;
   }
 
   /**

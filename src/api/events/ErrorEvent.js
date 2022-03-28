@@ -8,7 +8,8 @@ export default class ErrorEvent extends ExtendableEvent {
    */
   constructor(type, error) {
     super(type);
-    this.message = error?.message;
+    this.message = error?.message ?? 'Error';
+    this.error = error;
     this.promise = Promise.resolve(error);
   }
 }
