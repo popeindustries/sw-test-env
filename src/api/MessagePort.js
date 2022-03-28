@@ -23,9 +23,11 @@ export default class MessagePort extends EventTarget {
    * @param { Array<unknown> } [transferList]
    * @returns { void }
    */
-  postMessage(message, transferList) {
+  postMessage(message, transferList = []) {
+    const ports = transferList.filter((item) => item instanceof MessagePort);
+
     if (this._otherPort) {
-      handle(this._otherPort, 'message', { data: message, ports: transferList });
+      handle(this._otherPort, 'message', { data: message, ports });
     }
   }
 
