@@ -1,3 +1,3 @@
 node_modules
-/index.js
-/index.d.ts
+/sw-test-env.js
+/sw-test-env.d.ts

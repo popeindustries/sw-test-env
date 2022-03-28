@@ -8,28 +8,36 @@ export default class EventTarget {
   }
 
   /**
-   * @param { string } event
+   * @param { string } eventType
    * @param { (event: Event) => void } listener
    */
-  addEventListener(event, listener) {
-    if (!this._listeners[event]) {
-      this._listeners[event] = [];
+  addEventListener(eventType, listener) {
+    if (!this._listeners[eventType]) {
+      this._listeners[eventType] = [];
     }
-    this._listeners[event].push(listener);
+    this._listeners[eventType].push(listener);
   }
 
   /**
-   * @param { string } event
+   * @param { string } eventType
    * @param { (event: Event) => void } listener
    */
-  removeEventListener(event, listener) {
-    if (!this._listeners[event]) {
+  removeEventListener(eventType, listener) {
+    if (!this._listeners[eventType]) {
       return;
     }
-    this._listeners[event].splice(this._listeners[event].indexOf(listener), 1);
+    this._listeners[eventType].splice(this._listeners[eventType].indexOf(listener), 1);
   }
 
   removeAllEventListeners() {
     this._listeners = {};
+  }
+
+  /**
+   * @param { Event } event
+   * @returns { boolean }
+   */
+  dispatchEvent(event) {
+    return false;
   }
 }

@@ -19,7 +19,7 @@ export default class MessagePort extends EventTarget {
    */
   postMessage(message, transferList) {
     if (this._otherPort) {
-      handle(this._otherPort, 'message', message, transferList);
+      handle(this._otherPort, 'message', { data: message, ports: transferList });
     }
   }
 

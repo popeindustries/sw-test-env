@@ -1,3 +1,3 @@
 self.addEventListener('message', (evt) => {
-  evt.ports[0].postMessage({ foo: 'foo' });
+  evt.ports[0].postMessage({ foo: 'bar' });
 });

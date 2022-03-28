@@ -155,7 +155,7 @@ function unregister(contextKey) {
  * @param { Array<unknown> } [transferList]
  */
 function clientPostMessage(container, message, transferList) {
-  handle(container, 'message', { data: message, source: container.controller });
+  handle(container, 'message', { data: message, source: container.controller, ports: transferList });
 }
 
 /**
@@ -166,7 +166,7 @@ function clientPostMessage(container, message, transferList) {
  * @param { Array<unknown> } [transferList]
  * */
 function swPostMessage(container, origin, message, transferList) {
-  trigger(container, origin, 'message', { data: message, origin });
+  trigger(container, origin, 'message', { data: message, origin, ports: transferList });
 }
 
 /**

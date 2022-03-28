@@ -14,13 +14,15 @@ declare function connect(origin?: string, webroot?: string): Promise<MockService
  */
 declare function destroy(): Promise<void>;
 
-declare interface MockServiceWorkerContainer {
+declare interface MockServiceWorkerContainer extends EventTarget {
   /** The current `ServiceWorker`, if active */
   controller: MockServiceWorker | null;
   /** Resolves with `ServiceWorkerRegistration` when `ServiceWorker` becomes active */
   ready: Promise<MockServiceWorkerRegistration>;
   /** The global execution context of your service worker (`self` inside the worker script) */
   scope: MockServiceWorkerGlobalScope & Record<string, unknown>;
+
+  onmessage: ((this: MockServiceWorkerContainer, ev: MessageEvent) => void) | undefined;
 
   /**
    * Install or update a service worker
@@ -47,14 +49,14 @@ declare interface MockServiceWorkerContainer {
   getRegistrations(scope: string): Promise<Array<MockServiceWorkerRegistration>>;
 }
 
-declare interface MockServiceWorker {
+declare interface MockServiceWorker extends EventTarget {
   scriptURL: string;
   state: 'installing' | 'installed' | 'activating' | 'activated' | 'redundant';
 
   postMessage(message: unknown, transferList?: Array<unknown>): void;
 }
 
-declare interface MockServiceWorkerRegistration {
+declare interface MockServiceWorkerRegistration extends EventTarget {
   scope: string;
   index?: ContentIndex;
   navigationPreload?: MockNavigationPreloadManager;
@@ -67,7 +69,7 @@ declare interface MockServiceWorkerRegistration {
   unregister(): Promise<boolean>;
 }
 
-declare interface MockServiceWorkerGlobalScope {
+declare interface MockServiceWorkerGlobalScope extends EventTarget {
   caches: MockCacheStorage;
   clients: MockClients;
   registration: MockServiceWorkerRegistration;
@@ -135,6 +137,7 @@ declare class MessageChannel {
 }
 
 declare class MessagePort extends EventTarget {
+  onmessage: ((this: MessagePort, ev: MessageEvent) => void) | undefined;
   postMessage(messsage: unknown, transferList?: Array<unknown>);
   start(): void;
   close(): void;
