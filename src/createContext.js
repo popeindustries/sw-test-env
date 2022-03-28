@@ -14,6 +14,7 @@ function getAllPropertyNames(obj) {
 }
 */
 
+import fetch, { Headers, Request, Response } from 'node-fetch';
 import Cache from './api/Cache.js';
 import CacheStorage from './api/CacheStorage.js';
 import Client from './api/Client.js';

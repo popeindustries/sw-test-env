@@ -4,7 +4,6 @@
  * @property { import('./api/ServiceWorker').default } sw
  * @property { import('./api/ServiceWorkerGlobalScope').default & Record<string, unknown> } scope
  */
-import './polyfills.js';
 import createContext from './createContext.js';
 import esbuild from 'esbuild';
 import { handle } from './events.js';
