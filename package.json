@@ -73,5 +73,11 @@
     "*.{js,json,md,html}": [
       "prettier --write"
     ]
-  }
+  },
+  "files": [
+    "bin",
+    "*.d.ts",
+    "*.js",
+    "README.MD"
+  ]
 }
