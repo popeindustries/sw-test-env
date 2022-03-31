@@ -80,7 +80,11 @@ async function register(container, scriptURL, { scope = DEFAULT_SCOPE } = {}) {
     const contextPath = getResolvedPath(webroot, scriptURL);
     const contextLocation = new URL(scriptURL, origin);
     const registration = new ServiceWorkerRegistration(scopeHref, unregister.bind(null, scopeHref));
-    const globalScope = new ServiceWorkerGlobalScope(registration, origin);
+    const globalScope = new ServiceWorkerGlobalScope(registration, origin, async () => {
+      if (registration.waiting !== null) {
+        trigger(container, origin, 'activate');
+      }
+    });
     const sw = new ServiceWorker(scriptURL, swPostMessage.bind(null, container, origin));
     const scriptPath = isRelativePath(scriptURL) ? path.resolve(webroot, scriptURL) : scriptURL;
     try {

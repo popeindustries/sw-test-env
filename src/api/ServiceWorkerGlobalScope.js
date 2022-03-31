@@ -17,12 +17,14 @@ export default class ServiceWorkerGlobalScope extends EventTarget {
    * Constructor
    * @param { MockServiceWorkerRegistration } registration
    * @param { string } origin
+   * @param { () => Promise<void> } skipWaiting
    */
-  constructor(registration, origin) {
+  constructor(registration, origin, skipWaiting) {
     super();
     this.caches = new CacheStorage(origin);
     this.clients = new Clients();
     this.registration = registration;
+    this.skipWaiting = skipWaiting.bind(this);
 
     /** @type { (this: MockServiceWorkerGlobalScope, evt: MockExtendableEvent) => void } */
     this.oninstall;
@@ -34,13 +36,6 @@ export default class ServiceWorkerGlobalScope extends EventTarget {
     this.onmessage;
     /** @type { (this: MockServiceWorkerGlobalScope, evt: MockErrorEvent) => void } */
     this.onerror;
-  }
-
-  /**
-   * Force active
-   */
-  async skipWaiting() {
-    //
   }
 
   _destroy() {
