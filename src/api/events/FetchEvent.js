@@ -1,12 +1,3 @@
-/**
- * @typedef { Object } FetchEventInit
- * @property { import('node-fetch').Request } request
- * @property { Promise<import('node-fetch').Response> } [preloadResponse]
- * @property { string } [clientId]
- * @property { string } [resultingClientId]
- * @property { string } [replacesClientId]
- * @property { boolean } [isReload]
- */
 import { contentType } from 'mime-types';
 import ExtendableEvent from './ExtendableEvent.js';
 import path from 'path';

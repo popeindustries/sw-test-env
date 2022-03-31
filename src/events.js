@@ -2,6 +2,7 @@ import ErrorEvent from './api/events/ErrorEvent.js';
 import ExtendableEvent from './api/events/ExtendableEvent.js';
 import FetchEvent from './api/events/FetchEvent.js';
 import MessageEvent from './api/events/MessageEvent.js';
+import NotificationEvent from './api/events/NotificationEvent.js';
 
 /**
  * Create 'event' instance
@@ -25,6 +26,9 @@ export function create(target, type, ...args) {
       // @ts-ignore
       event = new MessageEvent(type, args[0]);
       break;
+    case 'notificationclick':
+      // @ts-ignore
+      return new NotificationEvent(type, args[0]);
     default:
       event = new ExtendableEvent(type);
   }

@@ -19,6 +19,7 @@ import Cache from './api/Cache.js';
 import CacheStorage from './api/CacheStorage.js';
 import Client from './api/Client.js';
 import Clients from './api/Clients.js';
+import { createRequire } from 'module';
 import ExtendableEvent from './api/events/ExtendableEvent.js';
 import fakeIndexedDB from 'fake-indexeddb/build/fakeIndexedDB.js';
 import FDBCursor from 'fake-indexeddb/build/FDBCursor.js';
@@ -37,6 +38,11 @@ import FormData from 'form-data';
 import MessageChannel from './api/MessageChannel.js';
 import MessageEvent from './api/events/MessageEvent.js';
 import MessagePort from './api/MessagePort.js';
+import Notification from './api/Notification.js';
+import NotificationEvent from './api/events/NotificationEvent.js';
+import PushEvent from './api/events/PushEvent.js';
+import PushManager from './api/PushManager.js';
+import PushSubscription from './api/PushSubscription.js';
 import ServiceWorkerGlobalScope from './api/ServiceWorkerGlobalScope.js';
 import ServiceWorkerRegistration from './api/ServiceWorkerRegistration.js';
 
@@ -79,6 +85,11 @@ export default function createContext(globalScope, contextlocation, contextpath,
       storage: 'not implemented',
       userAgent: 'sw-test-env',
     },
+    Notification,
+    NotificationEvent,
+    PushEvent,
+    PushManager,
+    PushSubscription,
     Request,
     Response,
     ServiceWorkerGlobalScope,
@@ -93,6 +104,7 @@ export default function createContext(globalScope, contextlocation, contextpath,
     location: contextlocation,
     origin,
     process,
+    require: createRequire(contextpath),
     setImmediate,
     setTimeout,
     setInterval,

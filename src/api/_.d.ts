@@ -1,17 +1,3 @@
-/// <reference types="node" />
-
-/**
- * Create/retrieve `ServiceWorkerContainer` instance for `origin`.
- * @param origin - the origin under which to host the service worker (default is `http://localhost:3333`)
- * @param webroot - the filepath used to resolve path to service worker on disk when registering (default is `process.cwd`)
- */
-declare function connect(origin?: string, webroot?: string): Promise<MockServiceWorkerContainer>;
-
-/**
- * Destroy all active `ServiceWorkerContainer` instances and their associated `ServiceWorker` contexts
- */
-declare function destroy(): Promise<void>;
-
 declare interface MockServiceWorkerContainer extends MockEventTarget {
   /** The current `ServiceWorker`, if active */
   controller: MockServiceWorker | null;
@@ -58,11 +44,14 @@ declare interface MockServiceWorkerRegistration extends MockEventTarget {
   scope: string;
   index?: MockContentIndex;
   navigationPreload?: MockNavigationPreloadManager;
+  pushManager?: MockPushManager;
   installing: MockServiceWorker | null;
   waiting: MockServiceWorker | null;
   activating: MockServiceWorker | null;
   active: MockServiceWorker | null;
 
+  getNotifications(options?: { tag?: string }): Promise<Array<MockNotification>>;
+  showNotification(title: string, options?: NotificationOptions): Promise<void>;
   update(): void;
   unregister(): Promise<boolean>;
 }
@@ -90,7 +79,7 @@ declare interface MockContentIndex {
 declare interface MockNavigationPreloadManager {
   enable(): Promise<void>;
   disable(): Promise<void>;
-  setHeaderValue(): Promise<void>;
+  setHeaderValue(headerValue: string): Promise<void>;
   getState(): Promise<{ enabled: boolean; headerValue: string }>;
 }
 
@@ -147,41 +136,6 @@ declare interface MockWindowClient extends MockClient {
   navigate(url: string): Promise<MockWindowClient>;
 }
 
-declare interface MockEventTarget {
-  listeners: Record<string, Array<(event: Event) => void>>;
-
-  addEventListener(eventType: string, listener: (event: Event) => void): void;
-  removeEventListener(eventType: string, listener: (event: Event) => void): void;
-  removeAllEventListeners(): void;
-  dispatchEvent(event: Event): boolean;
-}
-
-declare interface MockExtendableEvent extends Event {
-  waitUntil(promise: Promise<unknown>): void;
-}
-
-declare interface MockFetchEvent extends MockExtendableEvent {
-  request: import('node-fetch').Request;
-  preloadResponse: Promise<import('node-fetch').Response | undefined>;
-  clientId: string;
-  resultingClientId: string;
-  replacesClientId: string;
-
-  respondWith(promise: Promise<unknown>): void;
-}
-
-declare interface MockMessageEvent extends MockExtendableEvent {
-  data: unknown | null;
-  origin: string;
-  source: MessageEventSource | null;
-  ports: Array<MockMessagePort>;
-}
-
-declare interface MockErrorEvent extends MockExtendableEvent {
-  message: string | null;
-  error: Error;
-}
-
 declare type PostMessage = (message: unknown, transferList: Array<unknown>) => void;
 
 declare interface MockMessageChannel {
@@ -199,6 +153,48 @@ declare interface MockMessagePort extends MockEventTarget {
   close(): void;
 }
 
+declare interface MockPushManager {
+  subscription: MockPushSubscription;
+
+  getSubscription(): Promise<MockPushSubscription>;
+  permissionState(): Promise<string>;
+  subscribe(): Promise<MockPushSubscription>;
+}
+
+declare interface MockNotification {
+  body: string;
+  data: any;
+  dir: 'auto' | 'ltr' | 'rtl';
+  icon: string;
+  lang: string;
+  tag: string;
+  title: string;
+
+  close(): void;
+}
+
+declare interface MockPushMessageData {
+  arrayBuffer(): ArrayBuffer;
+  blob(): import('buffer').Blob;
+  json(): Object;
+  text(): string;
+}
+
+declare interface MockPushSubscription {
+  endpoint: string;
+  expirationTime: number | null;
+  options?: { userVisibleOnly: boolean; applicationServerKey: string };
+
+  getKey(name: 'p256dh' | 'auth'): ArrayBuffer;
+  toJSON(): Object;
+  unsubscribe(): Promise<boolean>;
+}
+
+type MockPushSubscriptionOptions = {
+  userVisibleOnly: boolean;
+  applicationServerKey: string;
+};
+
 type ContentDescription = {
   id: string;
   title: string;
@@ -208,15 +204,6 @@ type ContentDescription = {
   url: string;
 };
 
-type FetchEventInit = {
-  request: Request;
-  preloadResponse?: Promise<Response>;
-  clientId?: string;
-  resultingClientId?: string;
-  replacesClientId?: string;
-  isReload?: boolean;
-};
-
 interface TriggerEvents {
   install: void;
   activate: void;
@@ -224,16 +211,3 @@ interface TriggerEvents {
   error: void;
   unhandledrejection: void;
 }
-
-declare module 'fake-indexeddb/build/fakeIndexedDB.js' {}
-declare module 'fake-indexeddb/build/FDBCursor.js' {}
-declare module 'fake-indexeddb/build/FDBCursorWithValue.js' {}
-declare module 'fake-indexeddb/build/FDBDatabase.js' {}
-declare module 'fake-indexeddb/build/FDBFactory.js' {}
-declare module 'fake-indexeddb/build/FDBIndex.js' {}
-declare module 'fake-indexeddb/build/FDBKeyRange.js' {}
-declare module 'fake-indexeddb/build/FDBObjectStore.js' {}
-declare module 'fake-indexeddb/build/FDBOpenDBRequest.js' {}
-declare module 'fake-indexeddb/build/FDBRequest.js' {}
-declare module 'fake-indexeddb/build/FDBTransaction.js' {}
-declare module 'fake-indexeddb/build/FDBVersionChangeEvent.js' {}

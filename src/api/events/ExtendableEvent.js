@@ -1,3 +1,6 @@
+/**
+ * @implements MockExtendableEvent
+ */
 export default class ExtendableEvent extends Event {
   /**
    *

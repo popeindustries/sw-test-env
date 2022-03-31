@@ -1,5 +1,6 @@
 import esbuild from 'esbuild';
 import fs from 'fs';
+import glob from 'glob';
 import path from 'path';
 
 await esbuild.build({
@@ -22,9 +23,13 @@ await esbuild.build({
   ],
 });
 
+let types = '';
+
+for (const typePath of glob.sync('src/**/_.d.ts')) {
+  types += `// ${typePath}\n${fs.readFileSync(path.resolve(typePath), 'utf-8')}\n`;
+}
+
 fs.writeFileSync(
   'sw-test-env.d.ts',
-  fs
-    .readFileSync(path.resolve('src/types.d.ts'), 'utf-8')
-    .replace(/(declare) (interface|type|enum|namespace|function|class)/g, 'export $2'),
+  types.replace(/(declare) (interface|type|enum|namespace|function|class)/g, 'export $2'),
 );

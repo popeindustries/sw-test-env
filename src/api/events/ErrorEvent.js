@@ -1,5 +1,8 @@
 import ExtendableEvent from './ExtendableEvent.js';
 
+/**
+ * @implements MockErrorEvent
+ */
 export default class ErrorEvent extends ExtendableEvent {
   /**
    *
