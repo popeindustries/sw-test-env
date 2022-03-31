@@ -1,3 +1,10 @@
+// @ts-ignore
+declare type Headers = import('node-fetch').Headers;
+// @ts-ignore
+declare type Request = import('node-fetch').Request;
+// @ts-ignore
+declare type Response = import('node-fetch').Response;
+
 declare interface MockServiceWorkerContainer extends MockEventTarget {
   /** The current `ServiceWorker`, if active */
   controller: MockServiceWorker | null;
@@ -142,8 +149,12 @@ declare interface MockMessageChannel {
   port1: MockMessagePort;
   port2: MockMessagePort;
 }
+
 // @ts-ignore
-declare type MessageChannel = MockMessageChannel;
+declare class MessageChannel {
+  port1: MockMessagePort;
+  port2: MockMessagePort;
+}
 
 declare interface MockMessagePort extends MockEventTarget {
   onmessage: ((this: MockMessagePort, evt: MockMessageEvent) => void) | undefined;
