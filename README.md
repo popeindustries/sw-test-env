@@ -42,6 +42,7 @@ async function test() {
 
 - limited `Response` streaming and body conversion (uses the primitives from [node-fetch](https://github.com/bitinn/node-fetch))
 - `fetch` calls will be executed, so a request mocking tool like [nock](https://github.com/node-nock/nock) is recommended
+- `importScripts()` in service worker files not supported (use `import` statements instead)
 - requires at least version 16 of Node
 - not yet possible to cache based on `VARY` header
 - not tested against spec test suite or specific browser behaviour
@@ -62,7 +63,7 @@ Destroy all active `MockServiceWorkerContainer` instances and their registered `
 
 #### **`Headers, MessageChannel, Request, Response`**
 
-Classes for creating instances of `Headers`, `MessageChannel`, `Request`, and `Response` to be used when interacting with the `ServiceWorker` context.
+Classes for creating instances of `Headers`, `MessageChannel`, `Request`, and `Response` to be used when interacting with the `MockServiceWorker` context.
 
 ### MockServiceWorkerContainer
 
@@ -74,7 +75,7 @@ Load and execute `scriptURL` in a `MockServiceWorker` context. `scriptURL` may b
 
 **`options`** include:
 
-- **`scope: String`** the `MockServiceWorker` registration scope (defaults to `./`). Multiple `MoxkServiceWorker` instances can be registered on the same origin with different scopes.
+- **`scope: String`** the `MockServiceWorker` registration scope (defaults to `./`). Multiple `MockServiceWorker` instances can be registered on the same origin with different scopes.
 
 #### **`ready: Promise<void>`**
 
