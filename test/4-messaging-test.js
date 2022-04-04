@@ -17,7 +17,7 @@ describe('messaging', () => {
       await sw.register('sw-client-message.js');
       await sw.ready;
       sw.controller?.postMessage({ foo: 'foo' });
-      expect(sw.scope.message).to.deep.equal({ foo: 'foo' });
+      expect(sw.controller?.self.message).to.deep.equal({ foo: 'foo' });
     });
     it('should send ServiceWorker reply to client', (done) => {
       sw.register('sw-message.js')
@@ -74,7 +74,7 @@ describe('messaging', () => {
             expect(count).to.equal(2);
             done();
           };
-          sw.scope.clients.matchAll().then((all) => {
+          sw.controller?.self.clients.matchAll().then((all) => {
             all.forEach((client) => client.postMessage(data));
           });
         });

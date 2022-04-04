@@ -15,13 +15,11 @@ export default class ServiceWorkerContainer extends EventTarget {
     super();
     /** @type { MockServiceWorker | null } */
     this.controller = null;
-    /** @type { MockServiceWorkerGlobalScope & Record<string, unknown> } */
-    this.scope;
+    /** @type { MockServiceWorker } */
+    this.__serviceWorker__;
 
     /** @type { MockServiceWorkerRegistration } */
     this._registration;
-    /** @type { MockServiceWorker } */
-    this._sw;
     this._href = href;
     this._webroot = webroot;
 
@@ -73,12 +71,6 @@ export default class ServiceWorkerContainer extends EventTarget {
 
   _destroy() {
     // @ts-ignore
-    this.controller = undefined;
-    // @ts-ignore
-    this.scope = undefined;
-    // @ts-ignore
-    this._registration = undefined;
-    // @ts-ignore
-    this._sw = undefined;
+    this.controller = this._registration = this.__serviceWorker__ = undefined;
   }
 }

@@ -8,128 +8,110 @@ A sandboxed `ServiceWorker` context for testing your `ServiceWorker` code on the
 Testing code written to run in a `ServiceWorker` is hard, and generally requires a browser environment and lots of ceremony to work. `sw-test-env` is the magic ingredient for easy unit/integration testing of `ServiceWorker` code. Just load your script, and poke, prod, inspect, and manipulate the `ServiceWorker` context:
 
 ```js
-const assert = require('assert');
-const connect = require('sw-test-env').connect;
+import assert from 'assert';
+import { connect } from 'sw-test-env';
+
 // Equivalent to opening a browser window and accessing window.navigator.serviceWorker
 const sw = connect('http://localhost:3000', 'path/to/webroot');
 
-// Load and execute sw.js in a sandboxed ServiceWorker context
-sw.register('sw.js')
-  // Trigger the 'install' event and inspect the cache contents
-  .then((registration) => sw.trigger('install'))
-  // Inspect the cache
-  .then(() => sw.scope.caches.open('v1'))
-  .then((cache) => cache.keys())
-  .then((requests) => {
-    const urls = requests.map((request) => request.url);
-    assert.ok(urls.includes('assets/index.js'));
-  });
+async function test() {
+  // Load and execute sw.js in a sandboxed ServiceWorker context
+  const registration = await sw.register('sw.js');
+  // Trigger the 'install' event
+  await sw.trigger('install');
+  // Inspect the cache contents by reading from the installing service worker's internal scope
+  const cache = await sw.__serviceWorker__.self.caches.open('v1');
+  const requests = await cache.keys();
+  const urls = requests.map((request) => request.url);
+  assert.ok(urls.includes('assets/index.js'));
+}
 ```
 
 ## Features
 
-- load and execute `ServiceWorker` script files (or strings of code) in a sandboxed context
-- load and execute Node.js-style modules without compile/bundle step
-- inspect the properties of the `ServiceWorker` scope (`clients`, `caches`, `registration`, etc)
-- inspect/trigger exported `module` apis
+- load and execute `ServiceWorker` script files in a sandboxed context
+- inspect the properties of the `ServiceWorker` scope (`clients`, `caches`, `registration`, variables, etc)
 - manually trigger events on `ServiceWorker` (`install`, `activate`, `fetch`, `error`, etc)
 - connect multiple clients
 - register multiple, scoped `ServiceWorker` instances
 - `postMessage` between clients and registered `ServiceWorker` instances
-- register for notifications and push messages to connected clients
-- `importScripts()`
 - use `indexedDB`
+- TODO: register for notifications and push messages to connected clients
 
 ## Caveats
 
 - limited `Response` streaming and body conversion (uses the primitives from [node-fetch](https://github.com/bitinn/node-fetch))
 - `fetch` calls will be executed, so a request mocking tool like [nock](https://github.com/node-nock/nock) is recommended
-- requires at least version 7 of Node
+- requires at least version 16 of Node
 - not yet possible to cache based on `VARY` header
 - not tested against spec test suite or specific browser behaviour
 
 ## API
 
-#### **`connect(url: String, webroot: String): Promise<ServiceWorkerContainer>`**
+#### **`connect(url: string, webroot: string): Promise<MockServiceWorkerContainer>`**
 
-Create a new `ServiceWorkerContainer` instance at `url` (default is `http://localhost:3333/`) with `webroot` (default is current working directory). This is equivalent to opening a browser at `url` and accessing the `window.navigator.serviceworker` object. See [ServiceWorkerContainer](#serviceworkercontainer) below for additional behaviour.
+Create a new `MockServiceWorkerContainer` instance at `url` (default is `http://localhost:3333/`) with `webroot` (default is current working directory). This is equivalent to opening a browser at `url` and accessing the `window.navigator.serviceworker` object. See [MockServiceWorkerContainer](#mockserviceworkercontainer) below for additional behaviour.
 
-Multiple connections to same/different origins are supported, with access to `ServiceWorker` instances determined by `scope`.
+Multiple connections to same/different origins are supported, with access to `MockServiceWorker` instances determined by `scope`.
 
-**Note**: the `webroot` argument is used to resolve the path for registering the `ServiceWorker` and loading scripts with `importScripts()`.
+**Note**: the `webroot` argument is used to resolve the path for registering the `MockServiceWorker`.
 
-#### **`destroy(): Promise`**
+#### **`destroy(): Promise<void>`**
 
-Destroy all active `ServiceWorkerContainer` instances and their registered `ServiceWorker` instances. Should generally be called after each test (for example, in `afterEach()` when using Mocha/Jest/etc).
+Destroy all active `MockServiceWorkerContainer` instances and their registered `MockServiceWorker` instances. Should generally be called after each test (for example, in `afterEach()` when using Mocha/Jest/etc).
 
 #### **`Headers, MessageChannel, Request, Response`**
 
 Classes for creating instances of `Headers`, `MessageChannel`, `Request`, and `Response` to be used when interacting with the `ServiceWorker` context.
 
-### ServiceWorkerContainer
+### MockServiceWorkerContainer
 
-In addition to the behaviour documented [here](https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerContainer), a `ServiceWorkerContainer` instance returned by `connect()` has the following additions:
+In addition to the behaviour documented [here](https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerContainer), a `MockServiceWorkerContainer` instance returned by `connect()` has the following additions:
 
-#### **`sw.register(scriptURL: String, options: Object): Promise<Registration>`**
+#### **`register(scriptURL: String, options: { scope: string }): Promise<MockServiceWorkerRegistration>`**
 
-Load and execute `scriptURL` in a mock `ServiceWorker` context. `scriptURL` may be a relative or absolute filepath, or a string of code to be parsed and executed.
-
-In addition to all the normal global apis available to a `ServiceWorker`, the loaded script will also have access to `require`, `module`, `exports`, and `process`. As a result, script code that normally requires bundling for the browser (with Webpack, Browserify, et. al.) can be tested without a build step.
+Load and execute `scriptURL` in a `MockServiceWorker` context. `scriptURL` may be a relative or absolute filepath.
 
 **`options`** include:
 
-- **`scope: String`** the `ServiceWorker` registration scope (defaults to `./`). Multiple `ServiceWorker` instances can be registered on the same origin with different scopes.
+- **`scope: String`** the `MockServiceWorker` registration scope (defaults to `./`). Multiple `MoxkServiceWorker` instances can be registered on the same origin with different scopes.
 
-#### **`sw.ready: Promise`**
+#### **`ready: Promise<void>`**
 
 Force registered script to `install` and `activate`:
 
 ```js
-sw.register('sw.js')
-  .then((registration) => sw.ready)
-  .then(() => {
-    assert.equal(sw.controller.state, 'activated');
-  });
+const registration = await sw.register('sw.js');
+await sw.ready;
+assert.equal(sw.controller.state, 'activated');
 ```
 
-#### **`sw.trigger(eventType: String, ...args): Promise`**
+#### **`trigger(eventType: 'install' | 'activate'): Promise<void>`**
 
-Manually trigger an event (`install`, `activate`, `fetch`, `error`) in the `ServiceWorker` scope:
+#### **`trigger(eventType: 'fetch', options: FetchEventInit): Promise<Response>`**
+
+#### **`trigger(eventType: 'error' | 'unhandledrejection', error: Error): Promise<void>`**
+
+Manually trigger an event in the `MockServiceWorker` scope:
 
 ```js
-sw.register('sw.js')
-  .then((registration) => sw.ready)
-  .then((registration) => sw.trigger('fetch', '/assets/index.js'))
-  .then((response) => {
-    assert.equal(response.url, 'http://localhost:3333/assets/index.js');
-  });
+const registration = await sw.register('sw.js');
+await sw.ready;
+const response = await sw.trigger('fetch', { request: '/assets/index.js' });
+assert.equal(response.url, 'http://localhost:3333/assets/index.js');
 ```
 
-#### **`sw.scope: ServiceWorkerGlobalScope`**
+#### **`__serviceWorker__: MockServiceWorker`**
 
-Access the scope in which the registered script is running in:
-
-```js
-sw.register('sw.js')
-  .then((registration) => sw.ready)
-  .then(() => sw.scope.caches.open('v1'))
-  .then((cache) => cache.keys())
-  .then((requests) => {
-    const urls = requests.map((request) => request.url);
-    assert.ok(urls.includes('assets/index.js'));
-  });
-```
-
-#### **`sw.api: Object`**
-
-If a registered script exposes a module api (via `module` and `exports`), you can access the result as `api`:
+Access the registered `MockServiceWorker`, including it's internal `self` scope:
 
 ```js
-sw.register('sw-utils.js')
-  .then((registration) => sw.ready)
-  .then((registration) => {
-    sw.api.someUtilFn();
-  });
+const registration = await sw.register('sw.js');
+await sw.ready;
+const cache = sw.__serviceWorker__.self.caches.open('v1');
+const requests = await cache.keys();
+const urls = requests.map((request) => request.url);
+assert.ok(urls.includes('assets/index.js'));
 ```
 
 ## Inspiration & Thanks

@@ -2,7 +2,6 @@
  * @typedef { Object } Context
  * @property { import('./api/ServiceWorkerRegistration').default } registration
  * @property { import('./api/ServiceWorker').default } sw
- * @property { import('./api/ServiceWorkerGlobalScope').default & Record<string, unknown> } scope
  */
 import createContext from './createContext.js';
 import esbuild from 'esbuild';
@@ -54,7 +53,6 @@ export async function destroy() {
   for (const context of contexts.values()) {
     context.registration._destroy();
     context.sw._destroy();
-    context.scope._destroy();
   }
   containers.clear();
   contexts.clear();
@@ -100,9 +98,9 @@ async function register(container, scriptURL, { scope = DEFAULT_SCOPE } = {}) {
       const sandbox = /** @type { ServiceWorkerGlobalScope & Record<string, unknown> } */ (vm.createContext(vmContext));
       vm.runInContext(bundledSrc.outputFiles[0].text, sandbox);
 
+      sw.self = sandbox;
       context = {
         registration,
-        scope: sandbox,
         sw,
       };
       contexts.set(scopeHref, context);
@@ -115,12 +113,11 @@ async function register(container, scriptURL, { scope = DEFAULT_SCOPE } = {}) {
 
   for (const container of getContainersForUrlScope(scopeHref)) {
     container._registration = context.registration;
-    container._sw = context.sw;
-    container.scope = context.scope;
+    container.__serviceWorker__ = context.sw;
 
     // @ts-ignore
     // Create client for container
-    container.scope.clients._connect(container._href, clientPostMessage.bind(null, container));
+    context.sw.self.clients._connect(container._href, clientPostMessage.bind(null, container));
   }
 
   return container._registration;
@@ -144,7 +141,6 @@ function unregister(contextKey) {
 
   context.registration._destroy();
   context.sw._destroy();
-  context.scope._destroy();
 
   contexts.delete(contextKey);
 
@@ -203,7 +199,7 @@ async function trigger(container, origin, eventType, ...args) {
     // No state mgmt necessary
   }
 
-  const result = await handle(context.scope, eventType, ...args);
+  const result = await handle(context.sw.self, eventType, ...args);
 
   switch (eventType) {
     case 'install':
@@ -226,7 +222,6 @@ async function trigger(container, origin, eventType, ...args) {
  * @param { Array<ServiceWorkerContainer> } containers
  */
 function setState(state, context, containers) {
-  // TODO: emit serviceworker.onstatechange events
   switch (state) {
     case 'installing':
       if (context.sw.state !== 'installing') {
@@ -234,11 +229,13 @@ function setState(state, context, containers) {
       }
       context.registration.installing = context.sw;
       setControllerForContainers(null, containers);
+      handle(context.registration, 'updatefound');
       break;
     case 'installed':
       context.sw.state = state;
       context.registration.installing = null;
       context.registration.waiting = context.sw;
+      handle(context.sw, 'statechange');
       break;
     case 'activating':
       if (!context.sw.state.includes('install')) {
@@ -247,12 +244,14 @@ function setState(state, context, containers) {
       context.sw.state = state;
       context.registration.activating = context.sw;
       setControllerForContainers(null, containers);
+      handle(context.sw, 'statechange');
       break;
     case 'activated':
       context.sw.state = state;
       context.registration.waiting = null;
       context.registration.active = context.sw;
       setControllerForContainers(context.sw, containers);
+      handle(context.sw, 'statechange');
       break;
     default:
       if (context.sw.state !== 'activated') {
@@ -281,7 +280,7 @@ function getContainersForContext(context) {
   const results = [];
 
   for (const container of containers) {
-    if (container._sw === context.sw) {
+    if (container.__serviceWorker__ === context.sw) {
       results.push(container);
     }
   }
@@ -313,7 +312,7 @@ function getContainersForUrlScope(urlScope) {
  */
 function getContextForContainer(container) {
   for (const context of contexts.values()) {
-    if (context.sw === container._sw) {
+    if (context.sw === container.__serviceWorker__) {
       return context;
     }
   }

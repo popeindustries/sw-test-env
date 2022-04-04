@@ -10,8 +10,8 @@ declare interface MockServiceWorkerContainer extends MockEventTarget {
   controller: MockServiceWorker | null;
   /** Resolves with `ServiceWorkerRegistration` when `ServiceWorker` becomes active */
   ready: Promise<MockServiceWorkerRegistration>;
-  /** The global execution context of your service worker (`self` inside the worker script) */
-  scope: MockServiceWorkerGlobalScope & Record<string, unknown>;
+  /** The `ServiceWorker` instance associated with this container */
+  __serviceWorker__: MockServiceWorker;
 
   onmessage: ((this: MockServiceWorkerContainer, evt: MockMessageEvent) => void) | undefined;
 
@@ -43,6 +43,10 @@ declare interface MockServiceWorkerContainer extends MockEventTarget {
 declare interface MockServiceWorker extends MockEventTarget {
   scriptURL: string;
   state: 'installing' | 'installed' | 'activating' | 'activated' | 'redundant';
+  /** The global execution context of your service worker (`self` inside the worker script) */
+  self: MockServiceWorkerGlobalScope & Record<string, unknown>;
+
+  onstatechange: ((this: MockServiceWorker, evt: Event) => void) | undefined;
 
   postMessage(message: unknown, transferList?: Array<unknown>): void;
 }
@@ -56,6 +60,8 @@ declare interface MockServiceWorkerRegistration extends MockEventTarget {
   waiting: MockServiceWorker | null;
   activating: MockServiceWorker | null;
   active: MockServiceWorker | null;
+
+  onupdatefound: ((this: MockServiceWorkerRegistration, evt: Event) => void) | undefined;
 
   getNotifications(options?: { tag?: string }): Promise<Array<MockNotification>>;
   showNotification(title: string, options?: NotificationOptions): Promise<void>;

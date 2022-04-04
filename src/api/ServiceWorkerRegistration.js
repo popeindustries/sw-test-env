@@ -20,6 +20,9 @@ export default class ServiceWorkerRegistration extends EventTarget {
     this.pushManager = new PushManager();
     this.navigationPreload = new NavigationPreloadManager();
 
+    /** @type { ((this: MockServiceWorkerRegistration, evt: Event) => void) | undefined } */
+    this.onupdatefound;
+
     /** @type { MockServiceWorker | null } */
     this.installing = null;
     /** @type { MockServiceWorker | null } */
