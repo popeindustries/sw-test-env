@@ -32,7 +32,7 @@
     "lint:types": "tsc --noEmit --skipLibCheck",
     "preinstall": "npx only-allow pnpm",
     "prepare": "husky install",
-    "test": "pnpm run build && NODE_ENV=test mocha test/*.js --reporter spec --bail"
+    "test": "pnpm run build && mocha test/*.js --reporter spec --bail"
   },
   "dependencies": {
     "esbuild": "~0.14.27",
