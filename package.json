@@ -20,6 +20,12 @@
   ],
   "type": "module",
   "main": "sw-test-env.js",
+  "files": [
+    "bin",
+    "*.d.ts",
+    "*.js",
+    "README.MD"
+  ],
   "engines": {
     "node": ">=16"
   },
@@ -73,11 +79,5 @@
     "*.{js,json,md,html}": [
       "prettier --write"
     ]
-  },
-  "files": [
-    "bin",
-    "*.d.ts",
-    "*.js",
-    "README.MD"
-  ]
+  }
 }
